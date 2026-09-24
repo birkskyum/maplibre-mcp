@@ -23,9 +23,29 @@ This adds it for you in the current project. Add `--scope user` to have it in al
 codex mcp add maplibre -- npx -y maplibre-mcp
 ```
 
+### Gemini CLI
+
+```sh
+gemini mcp add maplibre npx -- -y maplibre-mcp
+```
+
+This adds it to the current project. Add `-s user` to have it in all your projects.
+
+### Grok
+
+```sh
+grok mcp add maplibre -- npx -y maplibre-mcp
+```
+
+This adds it for your user. Add `--scope project` to add it to the current project only.
+
 ### VS Code
 
-Add it to `.vscode/mcp.json` in your workspace, or to your user configuration with the **MCP: Open User Configuration** command:
+```sh
+code --add-mcp '{"name": "maplibre", "command": "npx", "args": ["-y", "maplibre-mcp"]}'
+```
+
+Or add it to `.vscode/mcp.json` in your workspace, or to your user configuration with the **MCP: Open User Configuration** command:
 
 ```json
 {
@@ -38,9 +58,13 @@ Add it to `.vscode/mcp.json` in your workspace, or to your user configuration wi
 }
 ```
 
-### Claude Desktop, Cursor, Gemini CLI and others
+### Cursor
 
-Most other clients read the same JSON. Claude Desktop keeps it in `claude_desktop_config.json`, which **Settings › Developer › Edit Config** opens. Cursor reads `~/.cursor/mcp.json`, or `.cursor/mcp.json` in a project, and Gemini CLI reads `~/.gemini/settings.json`.
+[Add to Cursor](cursor://anysphere.cursor-deeplink/mcp/install?name=maplibre&config=eyJjb21tYW5kIjoibnB4IiwiYXJncyI6WyIteSIsIm1hcGxpYnJlLW1jcCJdfQ==) opens Cursor, which adds it after you confirm. You can also add the JSON below to `~/.cursor/mcp.json`, or to `.cursor/mcp.json` in a project.
+
+### Claude Desktop, Windsurf and others
+
+Most other clients read this JSON. Claude Desktop keeps it in `claude_desktop_config.json`, which **Settings › Developer › Edit Config** opens.
 
 ```json
 {

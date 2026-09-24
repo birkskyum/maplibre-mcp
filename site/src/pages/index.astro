@@ -4,14 +4,29 @@ import session from '../data/session.json';
 import {sitePath} from '../docs';
 import Page from '../layouts/Page.astro';
 
-const INTRO_STEPS = [
-    {title: 'You ask', text: 'Tell the agent what you want in plain words, like "make the motorways red".'},
-    {title: 'It uses maplibre-mcp', text: 'The agent edits the style, checks it against the MapLibre Style Specification, and draws the map to see what it made.'},
-    {title: 'You get a checked result', text: 'It tells you what it changed, with pictures of the map before and after.'},
-];
 const CHECK_TOOLS = ['validate_style', 'describe_style_spec', 'describe_sources', 'format_style', 'migrate_style'];
 const SEE_TOOLS = ['render_style', 'compare_styles', 'compare_renderers'];
 const SHOW_TOOLS = ['show_map'];
+
+/** One-line setups for the clients whose command line adds MCP servers. */
+const INSTALL_COMMANDS = [
+    {client: 'Claude Code', command: 'claude mcp add maplibre -- npx -y maplibre-mcp'},
+    {client: 'Codex', command: 'codex mcp add maplibre -- npx -y maplibre-mcp'},
+    {client: 'Gemini CLI', command: 'gemini mcp add maplibre npx -- -y maplibre-mcp'},
+    {client: 'Grok', command: 'grok mcp add maplibre -- npx -y maplibre-mcp'},
+    {client: 'VS Code', command: `code --add-mcp '{"name": "maplibre", "command": "npx", "args": ["-y", "maplibre-mcp"]}'`},
+];
+const SERVER_CONFIG = {command: 'npx', args: ['-y', 'maplibre-mcp']};
+const CURSOR_LINK = `cursor://anysphere.cursor-deeplink/mcp/install?name=maplibre&config=${btoa(JSON.stringify(SERVER_CONFIG))}`;
+const CLIENT_JSON = `{
+  "mcpServers": {
+    "maplibre": {
+      "command": "npx",
+      "args": ["-y", "maplibre-mcp"]
+    }
+  }
+}`;
+const TABS = [...INSTALL_COMMANDS.map(install => install.client), 'Cursor', 'Other'];
 
 const BUTTON = 'rounded-full px-5 py-2.5 text-sm font-semibold';
 const CONTROL = 'rounded-full border border-slate-300 px-4 py-1.5 text-sm font-semibold hover:border-brand hover:text-brand dark:border-slate-600 dark:hover:border-sky-400 dark:hover:text-sky-400';
@@ -19,6 +34,11 @@ const SECTION_TITLE = 'text-3xl font-bold tracking-tight';
 const SECTION_LEAD = 'mt-4 text-lg text-slate-600 dark:text-slate-300';
 const TOOL_LIST = 'mt-3 font-mono text-xs text-slate-500 dark:text-slate-400';
 const OUTPUT_CARD = 'rounded-lg bg-slate-900 p-4 text-slate-100 dark:bg-slate-800';
+const TAB = 'shrink-0 rounded-t-lg px-3 py-1.5 text-sm font-medium';
+const SELECTED_TAB = 'bg-slate-900 text-white dark:bg-slate-800';
+const OTHER_TAB = 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white';
+const PANEL = 'items-baseline gap-3 px-4 py-3';
+const COPY_BUTTON = 'shrink-0 rounded bg-slate-700 px-3 py-1 font-sans text-xs text-slate-100 hover:bg-slate-600';
 ---
 <Page title="maplibre-mcp · MCP server for MapLibre" description="An MCP server that lets AI agents check, render and show MapLibre styles.">
 <link slot="head" rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@6.11.2/dist/maplibre-gl.css">
@@ -33,46 +53,49 @@ const OUTPUT_CARD = 'rounded-lg bg-slate-900 p-4 text-slate-100 dark:bg-slate-80
     </p>
     <div class="mt-8 flex flex-wrap justify-center gap-3">
       <a href={sitePath('getting-started/')} class={`${BUTTON} bg-brand text-white hover:bg-brand/90`}>Get started</a>
-      <a href="#demo" class={`${BUTTON} bg-slate-100 text-slate-900 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700`}>Watch it work</a>
+      <a href="#demo" class={`${BUTTON} bg-slate-100 text-slate-900 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700`}>See how it works</a>
     </div>
-    <div class="mx-auto mt-10 flex max-w-xl items-baseline gap-3 rounded-lg bg-slate-900 px-4 py-3 text-left font-mono text-sm text-slate-100 dark:bg-slate-800">
-      <span class="select-none text-slate-500">$</span>
-      <code id="install" class="min-w-0 flex-1">claude mcp add maplibre -- npx -y maplibre-mcp</code>
-      <button type="button" data-copy="install" class="rounded bg-slate-700 px-3 py-1 text-xs text-slate-100 hover:bg-slate-600">Copy</button>
-    </div>
-    <p class="mt-3 text-sm text-slate-500 dark:text-slate-400">Works in Claude Code, Claude Desktop, Codex, Cursor, VS Code and other MCP clients.</p>
-  </section>
-
-  <section class="border-y border-slate-200 bg-slate-50 py-20 dark:border-slate-800 dark:bg-slate-900">
-    <div class="mx-auto max-w-7xl px-6">
-      <div class="mx-auto max-w-3xl text-center">
-        <h2 class={SECTION_TITLE}>New to AI agents?</h2>
-        <p class={SECTION_LEAD}>
-          AI coding agents, like Claude Code, Codex and Cursor, change code for you when you ask them in plain words.
-          A map style is code too, a JSON file that says how every road, river and label on a map looks.
-        </p>
-        <p class={SECTION_LEAD}>
-          But an agent can't see the map it styles, and it easily mixes MapLibre up with Mapbox.
-          MCP, the Model Context Protocol, is the standard way to give an agent new tools, and maplibre-mcp gives it tools for MapLibre.
-          It runs on your computer, next to the agent.
-        </p>
-      </div>
-      <ol class="mt-12 grid gap-6 md:grid-cols-3">
-        {INTRO_STEPS.map((step, index) => (
-          <li class="rounded-2xl border border-slate-200 bg-white p-6 dark:border-slate-700 dark:bg-slate-950">
-            <span class="flex size-8 items-center justify-center rounded-full bg-brand text-sm font-semibold text-white">{index + 1}</span>
-            <h3 class="mt-4 text-lg font-semibold">{step.title}</h3>
-            <p class="mt-2 text-slate-600 dark:text-slate-300">{step.text}</p>
-          </li>
+    <div data-tabs class="mx-auto mt-10 max-w-2xl text-left">
+      <div role="tablist" aria-label="Your AI client" class="flex gap-1 overflow-x-auto max-sm:[mask-image:linear-gradient(to_right,black_85%,transparent)]">
+        {TABS.map((tab, index) => (
+          <button type="button" role="tab" aria-selected={index === 0 ? 'true' : 'false'} class={`${TAB} ${index === 0 ? SELECTED_TAB : OTHER_TAB}`}>{tab}</button>
         ))}
-      </ol>
+      </div>
+      <div class="rounded-lg rounded-tl-none bg-slate-900 font-mono text-sm text-slate-100 dark:bg-slate-800">
+        {INSTALL_COMMANDS.map((install, index) => (
+          <div role="tabpanel" hidden={index > 0} class={`flex ${PANEL}`}>
+            <span class="select-none text-slate-500">$</span>
+            <code id={`install-${index}`} class="min-w-0 flex-1 break-words">{install.command}</code>
+            <button type="button" data-copy={`install-${index}`} class={COPY_BUTTON}>Copy</button>
+          </div>
+        ))}
+        <div role="tabpanel" hidden class={`flex flex-wrap justify-between ${PANEL} font-sans`}>
+          <span class="text-slate-300">Cursor adds it from a link, after you confirm.</span>
+          <a href={CURSOR_LINK} class={COPY_BUTTON}>Add to Cursor</a>
+        </div>
+        <div role="tabpanel" hidden class="px-4 py-3">
+          <div class="flex items-baseline justify-between gap-3 font-sans">
+            <span class="text-slate-300">Claude Desktop, Windsurf and most other clients read this JSON.</span>
+            <button type="button" data-copy="install-json" class={COPY_BUTTON}>Copy</button>
+          </div>
+          <pre id="install-json" class="mt-3 overflow-x-auto">{CLIENT_JSON}</pre>
+        </div>
+      </div>
     </div>
+    <p class="mt-3 text-sm text-slate-500 dark:text-slate-400">
+      Needs Node.js 22 or newer. <a href={sitePath('getting-started/')} class="underline hover:text-brand">Where each client keeps its settings</a>
+    </p>
   </section>
 
-  <section id="demo" class="mx-auto max-w-7xl scroll-mt-16 px-6 py-20">
+  <section id="demo" class="scroll-mt-14 border-t border-slate-200 dark:border-slate-800">
+    <div class="mx-auto max-w-7xl px-6 py-20">
     <div class="mx-auto max-w-3xl text-center">
-      <h2 class={SECTION_TITLE}>Watch it work</h2>
-      <p class={SECTION_LEAD}>A real session in Claude Code, one step at a time. The pictures are the ones the agent looked at.</p>
+      <h2 class={SECTION_TITLE}>How it works</h2>
+      <p class={SECTION_LEAD}>
+        Coding agents like Claude Code, Codex and Cursor can edit a MapLibre style, but they can't see the map, and they can mix up MapLibre and Mapbox.
+        MCP, the Model Context Protocol, lets an agent call tools, and maplibre-mcp gives it tools to check styles and look at maps.
+        This is a real session, step by step.
+      </p>
     </div>
     <div data-walkthrough class="mt-12 grid gap-8 lg:grid-cols-[22rem_1fr]">
       <ol class="hidden space-y-1 lg:block">
@@ -110,6 +133,7 @@ const OUTPUT_CARD = 'rounded-lg bg-slate-900 p-4 text-slate-100 dark:bg-slate-80
           <button type="button" data-next class={CONTROL}>Next</button>
         </div>
       </div>
+    </div>
     </div>
   </section>
 
@@ -170,7 +194,7 @@ const OUTPUT_CARD = 'rounded-lg bg-slate-900 p-4 text-slate-100 dark:bg-slate-80
           </div>
           <figure class="md:col-span-3">
             <div id="live-map" class="h-96 w-full overflow-hidden rounded-lg border border-slate-200 dark:border-slate-700"></div>
-            <figcaption class="mt-2 text-sm text-slate-500 dark:text-slate-400">The kind of map show_map puts in the chat. This one is live, so try it.</figcaption>
+            <figcaption class="mt-2 text-sm text-slate-500 dark:text-slate-400">The kind of map show_map puts in the chat. This one is live.</figcaption>
           </figure>
         </div>
       </div>

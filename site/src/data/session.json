@@ -2,7 +2,7 @@
   "steps": [
     {
       "title": "You ask for a change",
-      "caption": "In Claude Code, you ask an AI agent to change a map style. The style is a JSON file that says how each layer of the map looks.",
+      "caption": "The request, typed into Claude Code.",
       "items": [
         {
           "kind": "prompt",
@@ -12,7 +12,7 @@
     },
     {
       "title": "The agent finds the layers",
-      "caption": "Like any coding agent, it searches the file and reads the motorway layers.",
+      "caption": "It finds the motorway layers in the style and reads them.",
       "items": [
         {
           "kind": "agent",

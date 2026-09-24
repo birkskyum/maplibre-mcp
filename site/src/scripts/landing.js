@@ -4,6 +4,8 @@ const STEP_DURATION = 6000;
 const PICTURE_STEP_DURATION = 9000;
 const REDUCED_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+const SELECTED_TAB = ['bg-slate-900', 'text-white', 'dark:bg-slate-800'];
+const OTHER_TAB = ['text-slate-600', 'hover:text-slate-900', 'dark:text-slate-400', 'dark:hover:text-white'];
 const CURRENT_STEP = ['bg-slate-100', 'dark:bg-slate-800'];
 const CURRENT_NUMBER = ['border-brand', 'bg-brand', 'text-white'];
 const OTHER_NUMBER = ['border-slate-300', 'text-slate-500', 'dark:border-slate-600', 'dark:text-slate-400'];
@@ -20,6 +22,7 @@ const walkthrough = {
 };
 
 setUpCopyButtons();
+setUpTabs();
 setUpWalkthrough();
 setUpLiveMap();
 
@@ -31,6 +34,23 @@ function setUpCopyButtons() {
             setTimeout(() => { button.textContent = 'Copy'; }, 1500);
         });
     }
+}
+
+function setUpTabs() {
+    for (const tabs of document.querySelectorAll('[data-tabs]')) {
+        const buttons = [...tabs.querySelectorAll('[role=tab]')];
+        const panels = [...tabs.querySelectorAll('[role=tabpanel]')];
+        for (const [index, button] of buttons.entries()) button.addEventListener('click', () => selectTab(buttons, panels, index));
+    }
+}
+
+function selectTab(buttons, panels, selected) {
+    for (const [index, button] of buttons.entries()) {
+        button.setAttribute('aria-selected', String(index === selected));
+        for (const name of SELECTED_TAB) button.classList.toggle(name, index === selected);
+        for (const name of OTHER_TAB) button.classList.toggle(name, index !== selected);
+    }
+    for (const [index, panel] of panels.entries()) panel.hidden = index !== selected;
 }
 
 /** Steps through the session by itself once it scrolls into view, and lets the reader go back and forth. */

@@ -13,9 +13,13 @@ export type Camera = {
 
 export type RenderRequest = {
     style: StyleSpecification;
+    /** The URL the style was loaded from, for renderers that draw the styles a server hosts. */
+    styleUrl?: string;
     camera: Camera;
     width: number;
     height: number;
+    /** Whether to draw the map's attribution, which comparisons between renderers leave out since only GL JS draws it. */
+    attribution?: boolean;
 };
 
 export type RenderResult = {
@@ -38,6 +42,16 @@ type CameraInput = {
     bounds?: number[];
 };
 
+/** Input fields for the camera of the tools that render. */
+export const CAMERA_INPUT = {
+    center: z.array(z.number()).length(2).optional().describe('[longitude, latitude] of the map center.'),
+    zoom: z.number().min(0).max(24).optional(),
+    bearing: z.number().optional().describe('The compass direction at the top of the map, in degrees.'),
+    pitch: z.number().min(0).max(85).optional().describe('Tilt in degrees from looking straight down.'),
+    bounds: z.array(z.number()).length(4).optional()
+        .describe('[west, south, east, north] to fit the map to, instead of center and zoom.'),
+};
+
 const FIT_PADDING = 32;
 const FIT_MAX_ZOOM = 18;
 const TILE_SIZE = 512;
@@ -56,21 +70,16 @@ export function registerRenderStyle(server: McpServer, renderers: Renderer[]): v
         inputSchema: z.object({
             ...STYLE_INPUT,
             renderer: z.enum(names).default(names[0]).describe('The MapLibre renderer to draw with.'),
-            center: z.array(z.number()).length(2).optional().describe('[longitude, latitude] of the map center.'),
-            zoom: z.number().min(0).max(24).optional(),
-            bearing: z.number().optional().describe('Rotation in degrees, counterclockwise from north.'),
-            pitch: z.number().min(0).max(85).optional().describe('Tilt in degrees from looking straight down.'),
-            bounds: z.array(z.number()).length(4).optional()
-                .describe('[west, south, east, north] to fit the map to, instead of center and zoom.'),
+            ...CAMERA_INPUT,
             width: z.number().int().min(64).max(2048).default(800),
             height: z.number().int().min(64).max(2048).default(600),
         }),
         annotations: {readOnlyHint: true, openWorldHint: true},
     }, async input => {
         const style = await loadStyle(input);
-        const renderer = renderers.find(candidate => candidate.name === input.renderer) ?? renderers[0];
         const camera = resolveCamera(style, input, input.width, input.height);
-        const {png, notes} = await renderer.render({style, camera, width: input.width, height: input.height});
+        const {png, notes} = await findRenderer(renderers, input.renderer)
+            .render({style, styleUrl: input.url, camera, width: input.width, height: input.height});
         return {
             content: [
                 {type: 'image', data: Buffer.from(png).toString('base64'), mimeType: 'image/png'},
@@ -80,14 +89,23 @@ export function registerRenderStyle(server: McpServer, renderers: Renderer[]): v
     });
 }
 
+export function findRenderer(renderers: Renderer[], name: string): Renderer {
+    return renderers.find(renderer => renderer.name === name) ?? renderers[0];
+}
+
 /** Resolves the camera from the tool input, and falls back to the camera stored in the style. */
-function resolveCamera(style: StyleSpecification, input: CameraInput, width: number, height: number): Camera {
+export function resolveCamera(style: StyleSpecification, input: CameraInput, width: number, height: number): Camera {
     const bearing = input.bearing ?? style.bearing ?? 0;
     const pitch = input.pitch ?? style.pitch ?? 0;
     if (input.bounds) return {...fitBounds(input.bounds, width, height), bearing, pitch};
 
     const [lng, lat] = input.center ?? style.center ?? [0, 0];
     return {center: [lng, lat], zoom: input.zoom ?? style.zoom ?? 0, bearing, pitch};
+}
+
+export function describeCamera({center, zoom, bearing, pitch}: Camera): string {
+    const [lng, lat] = center.map(value => Number(value.toFixed(5)));
+    return `Camera: center [${lng}, ${lat}], zoom ${Number(zoom.toFixed(2))}, bearing ${bearing}, pitch ${pitch}.`;
 }
 
 /** Returns the center and zoom that fit Web Mercator bounds into a viewport, the same way for every renderer. */
@@ -118,9 +136,4 @@ function lngFromMercatorX(x: number): number {
 
 function latFromMercatorY(y: number): number {
     return (360 / Math.PI) * Math.atan(Math.exp(((180 - y * 360) * Math.PI) / 180)) - 90;
-}
-
-function describeCamera({center, zoom, bearing, pitch}: Camera): string {
-    const [lng, lat] = center.map(value => Number(value.toFixed(5)));
-    return `Camera: center [${lng}, ${lat}], zoom ${Number(zoom.toFixed(2))}, bearing ${bearing}, pitch ${pitch}.`;
 }

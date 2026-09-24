@@ -16,6 +16,7 @@ type PageInput = {
     /** The style as JSON text, which keeps Playwright from walking the style's deep type. */
     styleJson: string;
     camera: Camera;
+    attribution: boolean;
     timeoutMs: number;
 };
 
@@ -66,14 +67,14 @@ export const glJsRenderer: Renderer = {name: 'gl-js', render};
 let origin: Promise<string> | undefined;
 let browser: Promise<Browser> | undefined;
 
-async function render({style, camera, width, height}: RenderRequest): Promise<RenderResult> {
+async function render({style, camera, width, height, attribution = true}: RenderRequest): Promise<RenderResult> {
     origin ??= serveAssets();
     const [pageOrigin, instance] = await Promise.all([origin, getBrowser()]);
     const page = await instance.newPage({viewport: {width, height}});
     try {
         await page.goto(pageOrigin);
         await page.waitForFunction(() => window.maplibregl !== undefined);
-        const outcome = await page.evaluate(renderInPage, {styleJson: JSON.stringify(style), camera, timeoutMs: IDLE_TIMEOUT_MS});
+        const outcome = await page.evaluate(renderInPage, {styleJson: JSON.stringify(style), camera, attribution, timeoutMs: IDLE_TIMEOUT_MS});
         return {png: await page.screenshot({type: 'png'}), notes: describeOutcome(outcome)};
     } finally {
         await page.close();
@@ -81,7 +82,7 @@ async function render({style, camera, width, height}: RenderRequest): Promise<Re
 }
 
 /** Draws the style in the page and waits until the map is idle. Runs in the browser, so it can only use its arguments. */
-async function renderInPage({styleJson, camera, timeoutMs}: PageInput): Promise<PageOutcome> {
+async function renderInPage({styleJson, camera, attribution, timeoutMs}: PageInput): Promise<PageOutcome> {
     const {maplibregl, pmtiles} = window;
     if (!maplibregl) throw new Error('MapLibre GL JS did not load in the page.');
     if (pmtiles) maplibregl.addProtocol('pmtiles', new pmtiles.Protocol().tile);
@@ -94,7 +95,7 @@ async function renderInPage({styleJson, camera, timeoutMs}: PageInput): Promise<
         ...camera,
         maxPitch: 85,
         fadeDuration: 0,
-        attributionControl: {compact: true},
+        attributionControl: attribution ? {compact: true} : false,
     });
     map.on('error', event => errors.add(event.error.message));
     map.on('styleimagemissing', event => missingImages.add(event.id));

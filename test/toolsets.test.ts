@@ -20,8 +20,14 @@ describe('createServer', () => {
     test('offers one render_style tool for all renderers', async () => {
         const client = await connect('gl-js,native');
         const {tools} = await client.listTools();
-        expect(tools.map(tool => tool.name)).toEqual(['show_map', 'render_style']);
+        expect(tools.map(tool => tool.name)).toEqual(['show_map', 'render_style', 'compare_styles', 'compare_renderers']);
         expect(tools[1].inputSchema.properties?.renderer).toMatchObject({enum: ['gl-js', 'native'], default: 'gl-js'});
+    });
+
+    test('offers compare_renderers only with two renderers', async () => {
+        const client = await connect('gl-js');
+        const {tools} = await client.listTools();
+        expect(tools.map(tool => tool.name)).toEqual(['show_map', 'render_style', 'compare_styles']);
     });
 
     test('offers no render_style without a renderer', async () => {

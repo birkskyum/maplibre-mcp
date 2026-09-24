@@ -1,6 +1,6 @@
 import type {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {createRequire} from 'node:module';
-import {encodePng} from '../../png.js';
+import {encodePng} from '../../image.js';
 import type {Renderer, RenderRequest, RenderResult} from '../../render-style.js';
 import type {Toolset} from '../../toolsets.js';
 
@@ -45,7 +45,7 @@ async function render({style, camera, width, height}: RenderRequest): Promise<Re
         const pixels = await renderMap(map, {...camera, width, height});
         const notes = [`Rendered with MapLibre Native ${version}.`, ...unsupportedFeatures(style)];
         if (failures.size > 0) notes.push('Failed requests:', ...[...failures].map(failure => `  ${failure}`));
-        return {png: encodePng(unpremultiply(pixels), width, height), notes};
+        return {png: encodePng({width, height, data: unpremultiply(pixels)}), notes};
     } finally {
         map.release();
     }

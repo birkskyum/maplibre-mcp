@@ -1,5 +1,6 @@
 import {McpServer} from '@modelcontextprotocol/server';
 import pkg from '../package.json' with {type: 'json'};
+import {registerCompareRenderers, registerCompareStyles} from './compare-styles.js';
 import {registerRenderStyle} from './render-style.js';
 import type {Toolset} from './toolsets.js';
 
@@ -9,6 +10,10 @@ export function createServer(toolsets: Toolset[]): McpServer {
     for (const toolset of toolsets) toolset.register?.(server);
 
     const renderers = toolsets.flatMap(toolset => toolset.renderer ?? []);
-    if (renderers.length > 0) registerRenderStyle(server, renderers);
+    if (renderers.length > 0) {
+        registerRenderStyle(server, renderers);
+        registerCompareStyles(server, renderers);
+    }
+    if (renderers.length > 1) registerCompareRenderers(server, renderers);
     return server;
 }

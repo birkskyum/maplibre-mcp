@@ -1,0 +1,41 @@
+---
+import {sitePath} from '../docs';
+
+/** One part of a step of the recorded session: your prompt, the agent's words, or a tool call and its result. */
+type Props = {
+    kind: string;
+    text?: string;
+    name?: string;
+    /** Whether the tool comes from maplibre-mcp. */
+    mcp?: boolean;
+    input?: string;
+    output?: string;
+    image?: string;
+    alt?: string;
+};
+
+const {kind, text = '', name, mcp, input, output, image, alt} = Astro.props;
+---
+{kind === 'prompt' && (
+  <div class="flex justify-end">
+    <p class="max-w-[90%] rounded-2xl rounded-br-sm bg-brand px-4 py-3 text-sm leading-relaxed text-white">{text}</p>
+  </div>
+)}
+{kind === 'agent' && (
+  <div class="max-w-[95%] space-y-2 text-sm leading-relaxed text-slate-700 dark:text-slate-200">
+    {text.split('\n\n').map(paragraph => <p>{paragraph}</p>)}
+  </div>
+)}
+{kind === 'tool' && (
+  <div class="overflow-hidden rounded-lg border border-slate-200 bg-slate-50 text-sm dark:border-slate-700 dark:bg-slate-900">
+    <div class="flex items-center gap-2 border-b border-slate-200 px-3 py-2 dark:border-slate-700">
+      {mcp && <span class="rounded bg-brand px-1.5 py-0.5 font-mono text-[10px] text-white">maplibre</span>}
+      <span class="font-mono text-xs font-semibold">{name}</span>
+      <span class="truncate font-mono text-xs text-slate-500 dark:text-slate-400">{input}</span>
+    </div>
+    <div class="space-y-3 px-3 py-2">
+      <pre class="font-mono text-xs whitespace-pre-wrap text-slate-700 dark:text-slate-300">{output}</pre>
+      {image && <img src={sitePath(image)} alt={alt} loading="lazy" class="w-full rounded border border-slate-200 bg-white dark:border-slate-700">}
+    </div>
+  </div>
+)}

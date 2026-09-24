@@ -1,0 +1,184 @@
+---
+import SessionItem from '../components/SessionItem.astro';
+import session from '../data/session.json';
+import {sitePath} from '../docs';
+import Page from '../layouts/Page.astro';
+
+const INTRO_STEPS = [
+    {title: 'You ask', text: 'Tell the agent what you want in plain words, like "make the motorways red".'},
+    {title: 'It uses maplibre-mcp', text: 'The agent edits the style, checks it against the MapLibre Style Specification, and draws the map to see what it made.'},
+    {title: 'You get a checked result', text: 'It tells you what it changed, with pictures of the map before and after.'},
+];
+const CHECK_TOOLS = ['validate_style', 'describe_style_spec', 'describe_sources', 'format_style', 'migrate_style'];
+const SEE_TOOLS = ['render_style', 'compare_styles', 'compare_renderers'];
+const SHOW_TOOLS = ['show_map'];
+
+const BUTTON = 'rounded-full px-5 py-2.5 text-sm font-semibold';
+const CONTROL = 'rounded-full border border-slate-300 px-4 py-1.5 text-sm font-semibold hover:border-brand hover:text-brand dark:border-slate-600 dark:hover:border-sky-400 dark:hover:text-sky-400';
+const SECTION_TITLE = 'text-3xl font-bold tracking-tight';
+const SECTION_LEAD = 'mt-4 text-lg text-slate-600 dark:text-slate-300';
+const TOOL_LIST = 'mt-3 font-mono text-xs text-slate-500 dark:text-slate-400';
+const OUTPUT_CARD = 'rounded-lg bg-slate-900 p-4 text-slate-100 dark:bg-slate-800';
+---
+<Page title="maplibre-mcp · MCP server for MapLibre" description="An MCP server that lets AI agents check, render and show MapLibre styles.">
+<link slot="head" rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@6.11.2/dist/maplibre-gl.css">
+
+<main>
+  <section class="mx-auto max-w-7xl px-6 pt-16 pb-20 text-center">
+    <p class="text-sm font-semibold text-brand dark:text-sky-400">MCP server for MapLibre</p>
+    <h1 class="mx-auto mt-3 max-w-4xl text-4xl font-bold tracking-tight sm:text-6xl">Let AI agents check, render and show MapLibre styles</h1>
+    <p class="mx-auto mt-6 max-w-2xl text-lg text-slate-600 dark:text-slate-300">
+      maplibre-mcp helps AI agents get MapLibre styles right. With it, an agent can check a style, look at the map it made, and show you an interactive map.
+      It runs on your computer and needs no API key.
+    </p>
+    <div class="mt-8 flex flex-wrap justify-center gap-3">
+      <a href={sitePath('getting-started/')} class={`${BUTTON} bg-brand text-white hover:bg-brand/90`}>Get started</a>
+      <a href="#demo" class={`${BUTTON} bg-slate-100 text-slate-900 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700`}>Watch it work</a>
+    </div>
+    <div class="mx-auto mt-10 flex max-w-xl items-baseline gap-3 rounded-lg bg-slate-900 px-4 py-3 text-left font-mono text-sm text-slate-100 dark:bg-slate-800">
+      <span class="select-none text-slate-500">$</span>
+      <code id="install" class="min-w-0 flex-1">claude mcp add maplibre -- npx -y maplibre-mcp</code>
+      <button type="button" data-copy="install" class="rounded bg-slate-700 px-3 py-1 text-xs text-slate-100 hover:bg-slate-600">Copy</button>
+    </div>
+    <p class="mt-3 text-sm text-slate-500 dark:text-slate-400">Works in Claude Code, Claude Desktop, Codex, Cursor, VS Code and other MCP clients.</p>
+  </section>
+
+  <section class="border-y border-slate-200 bg-slate-50 py-20 dark:border-slate-800 dark:bg-slate-900">
+    <div class="mx-auto max-w-7xl px-6">
+      <div class="mx-auto max-w-3xl text-center">
+        <h2 class={SECTION_TITLE}>New to AI agents?</h2>
+        <p class={SECTION_LEAD}>
+          AI coding agents, like Claude Code, Codex and Cursor, change code for you when you ask them in plain words.
+          A map style is code too, a JSON file that says how every road, river and label on a map looks.
+        </p>
+        <p class={SECTION_LEAD}>
+          But an agent can't see the map it styles, and it easily mixes MapLibre up with Mapbox.
+          MCP, the Model Context Protocol, is the standard way to give an agent new tools, and maplibre-mcp gives it tools for MapLibre.
+          It runs on your computer, next to the agent.
+        </p>
+      </div>
+      <ol class="mt-12 grid gap-6 md:grid-cols-3">
+        {INTRO_STEPS.map((step, index) => (
+          <li class="rounded-2xl border border-slate-200 bg-white p-6 dark:border-slate-700 dark:bg-slate-950">
+            <span class="flex size-8 items-center justify-center rounded-full bg-brand text-sm font-semibold text-white">{index + 1}</span>
+            <h3 class="mt-4 text-lg font-semibold">{step.title}</h3>
+            <p class="mt-2 text-slate-600 dark:text-slate-300">{step.text}</p>
+          </li>
+        ))}
+      </ol>
+    </div>
+  </section>
+
+  <section id="demo" class="mx-auto max-w-7xl scroll-mt-16 px-6 py-20">
+    <div class="mx-auto max-w-3xl text-center">
+      <h2 class={SECTION_TITLE}>Watch it work</h2>
+      <p class={SECTION_LEAD}>A real session in Claude Code, one step at a time. The pictures are the ones the agent looked at.</p>
+    </div>
+    <div data-walkthrough class="mt-12 grid gap-8 lg:grid-cols-[22rem_1fr]">
+      <ol class="hidden space-y-1 lg:block">
+        {session.steps.map((step, index) => (
+          <li>
+            <button type="button" data-go={index} class="flex w-full items-start gap-3 rounded-xl px-3 py-2.5 text-left hover:bg-slate-50 dark:hover:bg-slate-900">
+              <span data-number class="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full border text-xs font-semibold">{index + 1}</span>
+              <span>
+                <span class="block font-medium">{step.title}</span>
+                <span data-caption class="mt-1 hidden text-sm text-slate-600 dark:text-slate-300">{step.caption}</span>
+              </span>
+            </button>
+          </li>
+        ))}
+      </ol>
+      <div class="min-w-0">
+        <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-950">
+          <div class="h-1 bg-slate-100 dark:bg-slate-800"><div data-progress class="h-full w-0 bg-brand dark:bg-sky-400"></div></div>
+          <div class="grid grid-cols-1 p-4 sm:p-6">
+            {session.steps.map((step, index) => (
+              <div data-step class:list={['col-start-1 row-start-1 space-y-3 self-center transition-opacity duration-300', index > 0 && 'invisible opacity-0']}>
+                <div class="mb-4 lg:hidden">
+                  <p class="text-xs font-semibold text-brand dark:text-sky-400">Step {index + 1} of {session.steps.length}</p>
+                  <h3 class="mt-1 font-semibold">{step.title}</h3>
+                  <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">{step.caption}</p>
+                </div>
+                {step.items.map(item => <SessionItem {...item} />)}
+              </div>
+            ))}
+          </div>
+        </div>
+        <div class="mt-4 flex justify-center gap-2 lg:justify-end">
+          <button type="button" data-previous class={CONTROL}>Back</button>
+          <button type="button" data-play class={CONTROL}>Play</button>
+          <button type="button" data-next class={CONTROL}>Next</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="border-t border-slate-200 py-20 dark:border-slate-800">
+    <div class="mx-auto max-w-7xl px-6">
+      <div class="mx-auto max-w-3xl text-center">
+        <h2 class={SECTION_TITLE}>What it does</h2>
+        <p class={SECTION_LEAD}>The agent gets tools for three jobs, and decides by itself when to use them.</p>
+      </div>
+      <div class="mt-12 grid gap-16">
+        <div class="grid gap-6 md:grid-cols-5 md:gap-10">
+          <div class="md:col-span-2">
+            <h3 class="text-xl font-semibold">Check</h3>
+            <p class="mt-2 text-slate-600 dark:text-slate-300">
+              Validate a style against the MapLibre Style Specification, look up any property or expression with the GL JS and Native versions that support it,
+              and find layers that use a source layer or field the data does not have.
+            </p>
+            <p class={TOOL_LIST}>{CHECK_TOOLS.map((tool, index) => <>{index > 0 && ' · '}<a href={sitePath(`tools/#${tool}`)} class="hover:text-brand">{tool}</a></>)}</p>
+          </div>
+          <div class="space-y-3 font-mono text-xs md:col-span-3">
+            <div class={OUTPUT_CARD}>
+              <p class="text-sky-300">validate_style</p>
+              <p class="mt-1">error: layers[0].paint.line-colour: unknown property "line-colour"</p>
+            </div>
+            <div class={OUTPUT_CARD}>
+              <p class="text-sky-300">describe_style_spec {`{"name": "fill-colour"}`}</p>
+              <p class="mt-1">"fill-colour" is not in the MapLibre Style Specification. Did you mean: fill-color?</p>
+            </div>
+            <div class={OUTPUT_CARD}>
+              <p class="text-sky-300">describe_sources</p>
+              <p class="mt-1">Layer "motorways" reads the field "kind", which "omt" does not list for "transportation".</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid gap-6 md:grid-cols-5 md:gap-10">
+          <div class="md:col-span-2">
+            <h3 class="text-xl font-semibold">See</h3>
+            <p class="mt-2 text-slate-600 dark:text-slate-300">
+              Render a style with MapLibre GL JS, MapLibre Native or a Martin server, and compare two versions of a style, or two renderers, with the differences in red.
+            </p>
+            <p class={TOOL_LIST}>{SEE_TOOLS.map((tool, index) => <>{index > 0 && ' · '}<a href={sitePath(`tools/#${tool}`)} class="hover:text-brand">{tool}</a></>)}</p>
+          </div>
+          <figure class="md:col-span-3">
+            <img src={sitePath('images/compare-renderers.webp')} width="1276" height="300" loading="lazy" class="w-full rounded-lg border border-slate-200 dark:border-slate-700"
+                 alt="Copenhagen in 3D, drawn by MapLibre GL JS and by MapLibre Native, with a third panel marking the few pixels that differ">
+            <figcaption class="mt-2 text-sm text-slate-500 dark:text-slate-400">compare_renderers: GL JS and Native agree, apart from where a few labels land.</figcaption>
+          </figure>
+        </div>
+
+        <div class="grid gap-6 md:grid-cols-5 md:gap-10">
+          <div class="md:col-span-2">
+            <h3 class="text-xl font-semibold">Show</h3>
+            <p class="mt-2 text-slate-600 dark:text-slate-300">
+              Show you an interactive map with GeoJSON layers and markers, right in the chat, in clients that support MCP Apps.
+            </p>
+            <p class={TOOL_LIST}>{SHOW_TOOLS.map(tool => <a href={sitePath(`tools/#${tool}`)} class="hover:text-brand">{tool}</a>)}</p>
+          </div>
+          <figure class="md:col-span-3">
+            <div id="live-map" class="h-96 w-full overflow-hidden rounded-lg border border-slate-200 dark:border-slate-700"></div>
+            <figcaption class="mt-2 text-sm text-slate-500 dark:text-slate-400">The kind of map show_map puts in the chat. This one is live, so try it.</figcaption>
+          </figure>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+import '../scripts/landing.js';
+</script>
+</Page>

@@ -1,0 +1,86 @@
+---
+import type {MarkdownHeading} from 'astro';
+import {type DocsPage, docsPath, getDocs} from '../docs';
+import Page from './Page.astro';
+
+type Props = {
+    page: DocsPage;
+    headings: MarkdownHeading[];
+};
+
+const {page, headings} = Astro.props;
+const pages = await getDocs();
+const position = pages.findIndex(candidate => candidate.id === page.id);
+const previous = pages[position - 1];
+const next = pages[position + 1];
+const outline = headings.filter(heading => heading.depth <= 3);
+
+const PAGE_LINK = 'block rounded px-2 py-1';
+const CURRENT_PAGE_LINK = `${PAGE_LINK} bg-slate-100 font-semibold dark:bg-slate-800`;
+const OTHER_PAGE_LINK = `${PAGE_LINK} text-slate-600 hover:text-brand dark:text-slate-400`;
+const OUTLINE_LINK = 'block text-slate-500 hover:text-brand dark:text-slate-400';
+const PROSE = [
+    'prose prose-slate max-w-none dark:prose-invert',
+    'prose-headings:scroll-mt-20 prose-headings:tracking-tight prose-a:text-brand dark:prose-a:text-sky-400',
+    'prose-code:font-normal prose-code:before:content-none prose-code:after:content-none',
+    '[&_:not(pre)>code]:whitespace-nowrap',
+    '[&_:not(pre,h2,h3)>code]:rounded [&_:not(pre,h2,h3)>code]:bg-slate-100 [&_:not(pre,h2,h3)>code]:px-1 [&_:not(pre,h2,h3)>code]:py-0.5 dark:[&_:not(pre,h2,h3)>code]:bg-slate-800',
+    'prose-pre:bg-slate-900! dark:prose-pre:bg-slate-800! [&_pre[data-language=text]]:whitespace-pre-wrap',
+    'prose-img:rounded-lg prose-img:border prose-img:border-slate-200 dark:prose-img:border-slate-700',
+    'max-md:prose-table:block max-md:prose-table:overflow-x-auto',
+].join(' ');
+---
+<Page title={`${page.data.title} · maplibre-mcp`} description={page.data.description} section={page.data.section}>
+  <div class="mx-auto flex max-w-7xl gap-10 px-6 pt-8 pb-16">
+    <nav class="hidden w-56 shrink-0 text-sm md:block">
+      <ul class="sticky top-20 max-h-[calc(100vh-6rem)] space-y-1 overflow-y-auto">
+        {pages.map(candidate => (
+          <li>
+            <a href={docsPath(candidate)} class={candidate.id === page.id ? CURRENT_PAGE_LINK : OTHER_PAGE_LINK}>{candidate.data.title}</a>
+            {candidate.id === page.id && outline.length > 0 && (
+              <ul class="mt-1 mb-3 ml-2 space-y-1 border-l border-slate-200 xl:hidden dark:border-slate-800">
+                {outline.map(heading => (
+                  <li><a href={`#${heading.slug}`} class:list={[OUTLINE_LINK, heading.depth === 3 ? 'pl-6' : 'pl-3']}>{heading.text}</a></li>
+                ))}
+              </ul>
+            )}
+          </li>
+        ))}
+      </ul>
+    </nav>
+
+    <main class="min-w-0 flex-1">
+      <details class="mb-8 rounded-lg border border-slate-200 text-sm md:hidden dark:border-slate-800">
+        <summary class="cursor-pointer px-4 py-2 font-semibold">Pages</summary>
+        <ul class="space-y-1 px-2 pb-2">
+          {pages.map(candidate => (
+            <li><a href={docsPath(candidate)} class={candidate.id === page.id ? CURRENT_PAGE_LINK : OTHER_PAGE_LINK}>{candidate.data.title}</a></li>
+          ))}
+        </ul>
+      </details>
+
+      <article class={PROSE}>
+        <h1>{page.data.title}</h1>
+        <slot />
+      </article>
+
+      <nav class="mt-16 flex justify-between gap-4 border-t border-slate-200 pt-6 text-sm dark:border-slate-800">
+        {previous ? <a href={docsPath(previous)} class="hover:text-brand">← {previous.data.title}</a> : <span />}
+        {next && <a href={docsPath(next)} class="hover:text-brand">{next.data.title} →</a>}
+      </nav>
+    </main>
+
+    <aside class="hidden w-56 shrink-0 text-sm xl:block">
+      {outline.length > 0 && (
+        <div class="sticky top-20 max-h-[calc(100vh-6rem)] overflow-y-auto">
+          <p class="font-semibold">On this page</p>
+          <ul class="mt-2 space-y-1 border-l border-slate-200 dark:border-slate-800">
+            {outline.map(heading => (
+              <li><a href={`#${heading.slug}`} class:list={[OUTLINE_LINK, heading.depth === 3 ? 'pl-6' : 'pl-3']}>{heading.text}</a></li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </aside>
+  </div>
+</Page>

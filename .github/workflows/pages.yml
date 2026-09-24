@@ -30,6 +30,6 @@ jobs:
       - run: npm run build:site
       - uses: actions/upload-pages-artifact@v5
         with:
-          path: _site
+          path: site/dist
       - id: deployment
         uses: actions/deploy-pages@v5

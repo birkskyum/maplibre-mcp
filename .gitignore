@@ -1,3 +1,4 @@
 node_modules
 dist
-_site
+.astro
+site/src/content/docs/tools.md

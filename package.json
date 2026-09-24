@@ -30,7 +30,8 @@
   ],
   "scripts": {
     "build": "tsc && node build.ts",
-    "build:site": "rm -rf _site && cp -R site _site && tailwindcss -i site/style.css -o _site/style.css --minify",
+    "build:site": "npm run build && node site/generate-tools.ts && cd site && astro build",
+    "dev:site": "npm run build && node site/generate-tools.ts && cd site && astro dev",
     "test": "npm run build && vitest run",
     "prepublishOnly": "npm test"
   },
@@ -56,9 +57,11 @@
   },
   "devDependencies": {
     "@maplibre/maplibre-gl-native": "^6.5.0-pre.1",
-    "@tailwindcss/cli": "^4.3.3",
+    "@tailwindcss/typography": "^0.5.20",
+    "@tailwindcss/vite": "^4.3.3",
     "@types/node": "^26.6.2",
     "@types/pngjs": "^6.0.5",
+    "astro": "^7.3.5",
     "esbuild": "^0.28.2",
     "tailwindcss": "^4.3.3",
     "typescript": "^7.0.2",

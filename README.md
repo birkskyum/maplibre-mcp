@@ -6,7 +6,7 @@ It validates styles against the MapLibre Style Specification, looks up propertie
 
 Everything runs on your machine, and no API key is needed.
 
-The [website](https://birkskyum.github.io/maplibre-mcp/) replays an agent session that uses it.
+The [website](https://birkskyum.github.io/maplibre-mcp/) replays an agent session that uses it, and its [guide](https://birkskyum.github.io/maplibre-mcp/getting-started/) covers more clients and every tool.
 
 ## Setup
 
@@ -29,7 +29,7 @@ Claude Desktop, Cursor and most other clients:
 }
 ```
 
-Rendering with MapLibre GL JS uses the installed Google Chrome. Without Chrome, install Playwright's Chromium with `npx playwright-core install chromium`.
+Rendering with MapLibre GL JS uses the installed Google Chrome. Without Chrome, the first render fails with the command that installs the Chromium it can use instead.
 
 To run it as a remote server over Streamable HTTP, start it with `--http`. It listens on `http://127.0.0.1:3100/mcp`, and `--host` and `--port` change that. On a loopback address it only answers requests from localhost. On any other address it does not read or write files, and it still fetches the URLs it is given from its own network. It has no authentication, so put it behind a proxy that has.
 

@@ -1,0 +1,114 @@
+{
+  "steps": [
+    {
+      "title": "You ask for a change",
+      "caption": "In Claude Code, you ask an AI agent to change a map style. The style is a JSON file that says how each layer of the map looks.",
+      "items": [
+        {
+          "kind": "prompt",
+          "text": "style.json is a copy of OpenFreeMap's Liberty style, https://tiles.openfreemap.org/styles/liberty. Make the motorways red in style.json. Then check that the style is still valid, and show me a before and after around Copenhagen."
+        }
+      ]
+    },
+    {
+      "title": "The agent finds the layers",
+      "caption": "Like any coding agent, it searches the file and reads the motorway layers.",
+      "items": [
+        {
+          "kind": "agent",
+          "text": "I'll look at the motorway layers in style.json, load the MapLibre tools, then edit, validate, and render before/after around Copenhagen."
+        },
+        {
+          "kind": "tool",
+          "name": "Grep",
+          "input": "\"id\": \"[^\"]*motorway[^\"]*\" in style.json",
+          "output": "557:   \"id\": \"tunnel_motorway_link_casing\",\n894:   \"id\": \"tunnel_motorway_casing\",\n1018:  \"id\": \"tunnel_motorway_link\",\n… 9 more"
+        },
+        {
+          "kind": "tool",
+          "name": "Read",
+          "input": "style.json, 6 ranges",
+          "output": "road_motorway, tunnel_motorway, bridge_motorway, road_motorway_link, tunnel_motorway_link, bridge_motorway_link"
+        }
+      ]
+    },
+    {
+      "title": "It checks the style",
+      "caption": "Now it uses maplibre-mcp, whose tools have the maplibre label. validate_style checks the file against the MapLibre Style Specification, and finds no problems.",
+      "items": [
+        {
+          "kind": "tool",
+          "name": "validate_style",
+          "mcp": true,
+          "input": "{\"path\": \"style.json\"}",
+          "output": "{\"problems\": []}"
+        }
+      ]
+    },
+    {
+      "title": "It makes the change",
+      "caption": "It changes the motorway colors to red, in three places in the file.",
+      "items": [
+        {
+          "kind": "tool",
+          "name": "Edit",
+          "input": "style.json, 3 edits",
+          "output": "- \"line-color\": \"#fc8\",\n+ \"line-color\": \"#e53935\",\n- \"line-color\": \"#ffdaa6\",\n+ \"line-color\": \"#f4a09c\",\n- 5, \"hsl(26,87%,62%)\", 6, \"#fc8\"\n+ 5, \"#c62828\", 6, \"#e53935\""
+        }
+      ]
+    },
+    {
+      "title": "It checks again",
+      "caption": "The edited style is still valid.",
+      "items": [
+        {
+          "kind": "tool",
+          "name": "validate_style",
+          "mcp": true,
+          "input": "{\"path\": \"style.json\"}",
+          "output": "{\"problems\": []}"
+        }
+      ]
+    },
+    {
+      "title": "It looks at the map",
+      "caption": "An agent can't see a map by reading JSON. compare_styles draws the map before and after the change, and marks every pixel that changed in red. Only the motorways did.",
+      "items": [
+        {
+          "kind": "tool",
+          "name": "compare_styles",
+          "mcp": true,
+          "input": "{\"before\": {\"url\": \"https://tiles.openfreemap.org/styles/liberty\"}, \"after\": {\"path\": \"style.json\"}, \"center\": [12.5, 55.68], \"zoom\": 10, \"width\": 600, \"height\": 450}",
+          "output": "Left to right: Before, After, and the differences in red.\n1.48% of the pixels differ (3986 of 270000).",
+          "image": "images/compare-z10.webp",
+          "alt": "Copenhagen at zoom 10, before and after, with the motorways turned from orange to red, and a third panel where only the motorways are marked as different"
+        }
+      ]
+    },
+    {
+      "title": "It looks closer",
+      "caption": "It checks a second place, zoomed in on a motorway interchange.",
+      "items": [
+        {
+          "kind": "tool",
+          "name": "compare_styles",
+          "mcp": true,
+          "input": "{\"before\": {\"url\": \"https://tiles.openfreemap.org/styles/liberty\"}, \"after\": {\"path\": \"style.json\"}, \"center\": [12.54, 55.63], \"zoom\": 13, \"width\": 600, \"height\": 450}",
+          "output": "Left to right: Before, After, and the differences in red.\n1.75% of the pixels differ (4733 of 270000).",
+          "image": "images/compare-z13.webp",
+          "alt": "The E20 interchange on Amager at zoom 13, before and after, with the motorway and its ramps turned red"
+        }
+      ]
+    },
+    {
+      "title": "It tells you what it did",
+      "caption": "It reports what changed and what the images showed.",
+      "items": [
+        {
+          "kind": "agent",
+          "text": "Motorways in style.json are now red, the style still validates cleanly, and the before/after comparisons around Copenhagen show only the motorways changing.\n\nZoom 10 over greater Copenhagen: the M3 ring, the Motorring 4, E47 and E20 toward Amager all turn from orange to red, while trunk and primary roads stay orange.\n\nThe difference pane in each comparison highlights only motorway geometry, so nothing else in the style was affected."
+        }
+      ]
+    }
+  ]
+}

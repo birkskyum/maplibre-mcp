@@ -29,7 +29,7 @@ Claude Desktop, Cursor and most other clients:
 
 Rendering with MapLibre GL JS uses the installed Google Chrome. Without Chrome, install Playwright's Chromium with `npx playwright-core install chromium`.
 
-To run it as a remote server over Streamable HTTP, start it with `--http`. It listens on `http://127.0.0.1:3100/mcp`, and `--host` and `--port` change that. On a loopback address it only answers requests from localhost. It has no authentication, so on any other address, put it behind a proxy that has.
+To run it as a remote server over Streamable HTTP, start it with `--http`. It listens on `http://127.0.0.1:3100/mcp`, and `--host` and `--port` change that. On a loopback address it only answers requests from localhost. On any other address it does not read or write files, and it still fetches the URLs it is given from its own network. It has no authentication, so put it behind a proxy that has.
 
 ## Toolsets
 

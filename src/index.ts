@@ -1,7 +1,8 @@
 import {StdioServerTransport} from '@modelcontextprotocol/server/stdio';
 import {parseArgs} from 'node:util';
-import {serveHttp} from './http.js';
+import {isLoopback, serveHttp} from './http.js';
 import {createServer} from './server.js';
+import {disableFileAccess} from './style-input.js';
 import {selectToolsets, TOOLSETS} from './toolsets.js';
 
 const {values} = parseArgs({options: {
@@ -20,6 +21,7 @@ if (values.help) {
 try {
     const toolsets = selectToolsets(values.toolsets ?? process.env.MAPLIBRE_MCP_TOOLSETS);
     if (values.http) {
+        if (!isLoopback(values.host)) disableFileAccess();
         const url = await serveHttp(() => createServer(toolsets), values.host, Number(values.port));
         console.error(`maplibre-mcp is listening on ${url}`);
     } else {

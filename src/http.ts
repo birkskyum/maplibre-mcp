@@ -18,13 +18,17 @@ const CORS_HEADERS = {
     'access-control-expose-headers': '*',
 };
 
+export function isLoopback(host: string): boolean {
+    return LOOPBACK_HOSTS.has(host);
+}
+
 /**
  * Serves MCP over Streamable HTTP at `/mcp`, and resolves to its URL. On a loopback address, only requests from
  * localhost get through, which keeps web pages from reaching the server by DNS rebinding.
  */
 export function serveHttp(createMcpServer: () => McpServer, host: string, port: number): Promise<string> {
     const handler = createMcpHandler(() => createMcpServer());
-    const localOnly = LOOPBACK_HOSTS.has(host);
+    const localOnly = isLoopback(host);
     const server = createServer((incoming, outgoing) => {
         respond(handler, localOnly, incoming, outgoing).catch(error => {
             if (!outgoing.headersSent) outgoing.writeHead(500);

@@ -16,12 +16,19 @@ export type StyleInput = {
     path?: string;
 };
 
+let fileAccess = true;
+
+/** Stops the tools from reading and writing style files, for a server that clients on other machines can reach. */
+export function disableFileAccess(): void {
+    fileAccess = false;
+}
+
 /** Returns the style given as an object, a URL or a file path. */
 export async function loadStyle(input: StyleInput): Promise<StyleSpecification> {
     const given = [input.style, input.url, input.path].filter(value => value !== undefined);
     if (given.length !== 1) throw new Error('Pass exactly one of style, url and path.');
     if (input.url !== undefined) return fetchJson(input.url);
-    if (input.path !== undefined) return JSON.parse(await readFile(input.path, 'utf8'));
+    if (input.path !== undefined) return JSON.parse(await readFile(checkFileAccess(input.path), 'utf8'));
     return input.style as StyleSpecification;
 }
 
@@ -31,8 +38,15 @@ export async function loadStyle(input: StyleInput): Promise<StyleSpecification> 
  */
 export async function returnStyle(input: StyleInput, json: string, action: string): Promise<CallToolResult> {
     if (input.path === undefined) return {content: [{type: 'text', text: json}]};
-    await writeFile(input.path, json);
+    await writeFile(checkFileAccess(input.path), json);
     return {content: [{type: 'text', text: `${action} ${input.path}.`}]};
+}
+
+function checkFileAccess(path: string): string {
+    if (!fileAccess) {
+        throw new Error('This server does not read or write files, since other machines can reach it. Pass the style as an object or a URL.');
+    }
+    return path;
 }
 
 /** Fetches a JSON document. MapLibre has no `mapbox://` scheme, so those URLs fail with a hint instead. */

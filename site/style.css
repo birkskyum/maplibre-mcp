@@ -1,0 +1,7 @@
+@import "tailwindcss" source(none);
+@source "./index.html";
+@source "./app.js";
+
+@theme {
+  --color-brand: #295daa;
+}

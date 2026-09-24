@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>maplibre-mcp · MCP server for MapLibre</title>
+<meta name="description" content="An MCP server that lets AI agents check, render and show MapLibre styles.">
+<meta property="og:title" content="maplibre-mcp">
+<meta property="og:description" content="Let AI agents check, render and show MapLibre styles.">
+<meta property="og:image" content="https://birkskyum.github.io/maplibre-mcp/images/social.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='%23295daa'/%3E%3Cpath d='M7 20l6-8 5 6 3-4 4 6z' fill='white'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@6.11.2/dist/maplibre-gl.css">
+</head>
+<body class="bg-white text-slate-900 antialiased dark:bg-slate-950 dark:text-slate-100">
+
+<header data-page class="mx-auto flex max-w-5xl items-center justify-between px-6 py-5">
+  <a href="./" class="font-mono text-sm font-semibold">maplibre-mcp</a>
+  <nav class="flex gap-6 text-sm text-slate-600 dark:text-slate-400">
+    <a href="#setup" class="hover:text-brand">Setup</a>
+    <a href="https://github.com/birkskyum/maplibre-mcp" class="hover:text-brand">GitHub</a>
+  </nav>
+</header>
+
+<main>
+  <section data-page class="mx-auto max-w-5xl px-6 pt-10 pb-16">
+    <p class="text-sm font-semibold text-brand dark:text-sky-400">MCP server for MapLibre</p>
+    <h1 class="mt-3 max-w-3xl text-4xl font-bold tracking-tight sm:text-5xl">Let AI agents check, render and show MapLibre styles</h1>
+    <p class="mt-5 max-w-2xl text-lg text-slate-600 dark:text-slate-300">
+      maplibre-mcp gives coding agents the MapLibre Style Specification, a way to look at what they built, and a map to show you.
+      It runs on your machine and needs no API key.
+    </p>
+    <div class="mt-8 flex max-w-2xl items-baseline gap-3 rounded-lg bg-slate-900 px-4 py-3 font-mono text-sm text-slate-100 dark:bg-slate-800">
+      <span class="select-none text-slate-500">$</span>
+      <code id="install" class="min-w-0 flex-1">claude mcp add maplibre -- npx -y maplibre-mcp</code>
+      <button type="button" data-copy="install" class="rounded bg-slate-700 px-3 py-1 text-xs text-slate-100 hover:bg-slate-600">Copy</button>
+    </div>
+    <p class="mt-3 text-sm text-slate-500 dark:text-slate-400">
+      Works in Claude Code, Claude Desktop, Cursor, VS Code and other MCP clients. <a href="#setup" class="text-brand underline dark:text-sky-400">Other setups</a>
+    </p>
+  </section>
+
+  <section id="demo" class="bg-slate-50 py-16 dark:bg-slate-900">
+    <div class="mx-auto max-w-5xl px-6">
+      <div data-page>
+        <h2 class="text-2xl font-bold tracking-tight">An agent at work</h2>
+        <p class="mt-2 text-slate-600 dark:text-slate-300">A real Claude Code session, condensed. The images are the ones the agent looked at.</p>
+      </div>
+      <div class="mt-6 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-950">
+        <div class="flex items-center justify-between border-b border-slate-200 px-4 py-2 dark:border-slate-700">
+          <span class="font-mono text-xs text-slate-500">claude · maplibre-mcp</span>
+          <div class="flex gap-2">
+            <button type="button" id="replay-pause" class="rounded px-2 py-1 text-xs text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">Pause</button>
+            <button type="button" id="replay-restart" class="rounded px-2 py-1 text-xs text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">Replay</button>
+          </div>
+        </div>
+        <div id="replay" class="h-[36rem] space-y-4 overflow-y-auto p-4 sm:p-6"></div>
+      </div>
+    </div>
+  </section>
+
+  <section data-page class="mx-auto max-w-5xl px-6 py-16">
+    <h2 class="text-2xl font-bold tracking-tight">What it does</h2>
+    <div class="mt-8 grid gap-10">
+      <div class="grid gap-6 md:grid-cols-5">
+        <div class="md:col-span-2">
+          <h3 class="text-lg font-semibold">Check</h3>
+          <p class="mt-2 text-slate-600 dark:text-slate-300">
+            Validate a style against the MapLibre Style Specification, look up any property or expression with the GL JS and Native versions that support it,
+            and find layers that use a source layer or field the data does not have.
+          </p>
+          <p class="mt-3 font-mono text-xs text-slate-500">validate_style · describe_style_spec · describe_sources · format_style · migrate_style</p>
+        </div>
+        <div class="space-y-3 font-mono text-xs md:col-span-3">
+          <div class="rounded-lg bg-slate-900 p-4 text-slate-100 dark:bg-slate-800">
+            <p class="text-sky-300">validate_style</p>
+            <p class="mt-1">error: layers[0].paint.line-colour: unknown property "line-colour"</p>
+          </div>
+          <div class="rounded-lg bg-slate-900 p-4 text-slate-100 dark:bg-slate-800">
+            <p class="text-sky-300">describe_style_spec {"name": "fill-colour"}</p>
+            <p class="mt-1">"fill-colour" is not in the MapLibre Style Specification. Did you mean: fill-color?</p>
+          </div>
+          <div class="rounded-lg bg-slate-900 p-4 text-slate-100 dark:bg-slate-800">
+            <p class="text-sky-300">describe_sources</p>
+            <p class="mt-1">Layer "motorways" reads the field "kind", which "omt" does not list for "transportation".</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid gap-6 md:grid-cols-5">
+        <div class="md:col-span-2">
+          <h3 class="text-lg font-semibold">See</h3>
+          <p class="mt-2 text-slate-600 dark:text-slate-300">
+            Render a style with MapLibre GL JS, MapLibre Native or a Martin server, and compare two versions of a style, or two renderers, with the differences in red.
+          </p>
+          <p class="mt-3 font-mono text-xs text-slate-500">render_style · compare_styles · compare_renderers</p>
+        </div>
+        <figure class="md:col-span-3">
+          <img src="images/compare-renderers.webp" width="1276" height="300" loading="lazy" class="w-full rounded-lg border border-slate-200 dark:border-slate-700"
+               alt="Copenhagen in 3D, drawn by MapLibre GL JS and by MapLibre Native, with a third panel marking the few pixels that differ">
+          <figcaption class="mt-2 text-sm text-slate-500">compare_renderers: GL JS and Native agree, apart from where a few labels land.</figcaption>
+        </figure>
+      </div>
+
+      <div class="grid gap-6 md:grid-cols-5">
+        <div class="md:col-span-2">
+          <h3 class="text-lg font-semibold">Show</h3>
+          <p class="mt-2 text-slate-600 dark:text-slate-300">
+            Show the user an interactive map with GeoJSON layers and markers, right in the chat, in clients that support MCP Apps.
+          </p>
+          <p class="mt-3 font-mono text-xs text-slate-500">show_map</p>
+        </div>
+        <figure class="md:col-span-3">
+          <div id="live-map" class="h-80 w-full overflow-hidden rounded-lg border border-slate-200 dark:border-slate-700"></div>
+          <figcaption class="mt-2 text-sm text-slate-500">The kind of map show_map puts in the chat. This one is live.</figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <section id="setup" data-page class="border-t border-slate-200 py-16 dark:border-slate-800">
+    <div class="mx-auto max-w-5xl px-6">
+      <h2 class="text-2xl font-bold tracking-tight">Setup</h2>
+      <div class="mt-8 grid grid-cols-1 gap-8 md:grid-cols-2">
+        <div>
+          <h3 class="font-semibold">Claude Code</h3>
+          <pre class="mt-3 overflow-x-auto rounded-lg bg-slate-900 p-4 font-mono text-sm text-slate-100 dark:bg-slate-800">claude mcp add maplibre -- npx -y maplibre-mcp</pre>
+          <h3 class="mt-6 font-semibold">Claude Desktop, Cursor and most other clients</h3>
+          <pre class="mt-3 overflow-x-auto rounded-lg bg-slate-900 p-4 font-mono text-sm text-slate-100 dark:bg-slate-800">{
+  "mcpServers": {
+    "maplibre": {
+      "command": "npx",
+      "args": ["-y", "maplibre-mcp"]
+    }
+  }
+}</pre>
+          <h3 class="mt-6 font-semibold">As a remote server</h3>
+          <pre class="mt-3 overflow-x-auto rounded-lg bg-slate-900 p-4 font-mono text-sm text-slate-100 dark:bg-slate-800">npx -y maplibre-mcp --http</pre>
+          <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">Serves Streamable HTTP at http://127.0.0.1:3100/mcp.</p>
+        </div>
+        <div>
+          <h3 class="font-semibold">Toolsets</h3>
+          <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">The tools come in toolsets, one per MapLibre project. Choose them with <code class="font-mono">--toolsets</code>; style and gl-js are on by default.</p>
+          <table class="mt-4 w-full text-left text-sm">
+            <tbody class="divide-y divide-slate-200 dark:divide-slate-800">
+              <tr><td class="py-2 pr-4 font-mono">style</td><td class="py-2 text-slate-600 dark:text-slate-300">Validate, format and migrate styles, look up the spec, check sources</td></tr>
+              <tr><td class="py-2 pr-4 font-mono">gl-js</td><td class="py-2 text-slate-600 dark:text-slate-300">Render with MapLibre GL JS, and show maps in the chat</td></tr>
+              <tr><td class="py-2 pr-4 font-mono">native</td><td class="py-2 text-slate-600 dark:text-slate-300">Render with MapLibre Native, the engine of the iOS and Android SDKs</td></tr>
+              <tr><td class="py-2 pr-4 font-mono">martin</td><td class="py-2 text-slate-600 dark:text-slate-300">List what a Martin tile server serves, and render the styles it serves</td></tr>
+            </tbody>
+          </table>
+          <p class="mt-4 text-sm text-slate-600 dark:text-slate-300">
+            Rendering with GL JS uses the installed Chrome. The <a href="https://github.com/birkskyum/maplibre-mcp#readme" class="text-brand underline dark:text-sky-400">README</a> covers Native, Martin and the rest.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer data-page class="border-t border-slate-200 py-8 text-sm text-slate-500 dark:border-slate-800">
+  <div class="mx-auto flex max-w-5xl flex-wrap justify-between gap-2 px-6">
+    <span>MIT license · <a href="https://github.com/birkskyum/maplibre-mcp" class="hover:text-brand">Source on GitHub</a></span>
+    <span>Built on MapLibre GL JS, MapLibre Native, Martin and OpenFreeMap</span>
+  </div>
+</footer>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>

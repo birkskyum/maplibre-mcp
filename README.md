@@ -6,6 +6,8 @@ It validates styles against the MapLibre Style Specification, looks up propertie
 
 Everything runs on your machine, and no API key is needed.
 
+The [website](https://birkskyum.github.io/maplibre-mcp/) replays an agent session that uses it.
+
 ## Setup
 
 Claude Code:

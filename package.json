@@ -4,6 +4,7 @@
   "description": "MCP server for MapLibre: check, render and show map styles from AI agents",
   "license": "MIT",
   "author": "Birk Skyum",
+  "homepage": "https://birkskyum.github.io/maplibre-mcp/",
   "type": "module",
   "repository": {
     "type": "git",
@@ -29,6 +30,7 @@
   ],
   "scripts": {
     "build": "tsc && node build.ts",
+    "build:site": "rm -rf _site && cp -R site _site && tailwindcss -i site/style.css -o _site/style.css --minify",
     "test": "npm run build && vitest run",
     "prepublishOnly": "npm test"
   },
@@ -54,9 +56,11 @@
   },
   "devDependencies": {
     "@maplibre/maplibre-gl-native": "^6.5.0-pre.1",
+    "@tailwindcss/cli": "^4.3.3",
     "@types/node": "^26.6.2",
     "@types/pngjs": "^6.0.5",
     "esbuild": "^0.28.2",
+    "tailwindcss": "^4.3.3",
     "typescript": "^7.0.2",
     "vitest": "^5.0.1"
   }

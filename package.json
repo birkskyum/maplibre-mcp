@@ -1,0 +1,62 @@
+{
+  "name": "maplibre-mcp",
+  "version": "0.1.0",
+  "description": "MCP server for MapLibre: check, render and show map styles from AI agents",
+  "license": "MIT",
+  "author": "Birk Skyum",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/birkskyum/maplibre-mcp.git"
+  },
+  "keywords": [
+    "mcp",
+    "maplibre",
+    "maplibre-gl",
+    "maplibre-native",
+    "martin",
+    "map",
+    "style"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "bin": {
+    "maplibre-mcp": "dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc && node build.ts",
+    "test": "npm run build && vitest run",
+    "prepublishOnly": "npm test"
+  },
+  "dependencies": {
+    "@maplibre/maplibre-gl-style-spec": "^26.4.4",
+    "@modelcontextprotocol/client": "^2.1.0",
+    "@modelcontextprotocol/ext-apps": "^2.0.0",
+    "@modelcontextprotocol/server": "^2.1.0",
+    "maplibre-gl": "^6.11.2",
+    "playwright-core": "^1.63.0",
+    "pmtiles": "^4.5.0",
+    "zod": "^4.6.5"
+  },
+  "peerDependencies": {
+    "@maplibre/maplibre-gl-native": "^6.4.1 || ^6.5.0-pre.1"
+  },
+  "peerDependenciesMeta": {
+    "@maplibre/maplibre-gl-native": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@maplibre/maplibre-gl-native": "^6.5.0-pre.1",
+    "@types/node": "^26.6.2",
+    "@types/pngjs": "^6.0.5",
+    "esbuild": "^0.28.2",
+    "pngjs": "^7.0.0",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.1"
+  }
+}

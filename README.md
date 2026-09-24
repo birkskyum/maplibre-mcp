@@ -104,4 +104,4 @@ npm test
 
 ## License
 
-MIT
+MIT © 2026 [Birk Skyum](https://github.com/birkskyum)

@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "description": "MCP server for MapLibre: check, render and show map styles from AI agents",
   "license": "MIT",
-  "author": "Birk Skyum",
+  "author": "Birk Skyum (https://github.com/birkskyum)",
   "homepage": "https://birkskyum.github.io/maplibre-mcp/",
   "type": "module",
   "repository": {

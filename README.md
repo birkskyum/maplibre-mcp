@@ -37,6 +37,19 @@ Claude Desktop, Cursor, Windsurf and most other clients read this JSON. [Getting
 
 Rendering with MapLibre GL JS uses the installed Google Chrome. Without Chrome, the first render fails with the command that installs the Chromium it can use instead.
 
+## Command line
+
+Agents that work in a shell, and people, can also run the rendering tools as commands, without setting up MCP. A style is a file or a URL.
+
+```sh
+npx -y maplibre-mcp render style.json --center 12.57,55.68 --zoom 12
+npx -y maplibre-mcp compare before.json after.json --zoom 10
+npx -y maplibre-mcp compare-renderers style.json --renderers gl-js,native
+npx -y maplibre-mcp describe-sources style.json
+```
+
+The images go to `map.png`, `compare.png` and `renderers.png`, or to `--out`. `npx -y maplibre-mcp --help` lists the options, and [Command line](https://birkskyum.github.io/maplibre-mcp/command-line/) has the details. To validate, format or migrate a style, use `gl-style-validate`, `gl-style-format` and `gl-style-migrate` from `@maplibre/maplibre-gl-style-spec`.
+
 ## Tools
 
 - `validate_style` checks a style against the MapLibre Style Specification, and lists each problem with the path to its property.

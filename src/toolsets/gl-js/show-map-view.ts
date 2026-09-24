@@ -34,14 +34,22 @@ async function showMap(payload: MapPayload): Promise<void> {
     if (app.getHostContext()?.availableDisplayModes?.includes('fullscreen')) instance.addControl(fullscreenControl());
     instance.on('error', event => reportError(event.error));
     instance.once('load', () => {
-        const firstLabel = instance.getStyle().layers.find(layer => layer.type === 'symbol')?.id;
+        const labels = topLabelLayer(instance.getStyle().layers);
         for (const [id, source] of Object.entries(payload.sources)) instance.addSource(id, source);
-        for (const layer of payload.layers) instance.addLayer(layer, LABEL_TYPES.has(layer.type) ? undefined : firstLabel);
+        for (const layer of payload.layers) instance.addLayer(layer, LABEL_TYPES.has(layer.type) ? undefined : labels);
     });
     for (const {position, label, color} of payload.markers) {
         const marker = new maplibregl.Marker({color}).setLngLat(position).addTo(instance);
         if (label) marker.setPopup(new maplibregl.Popup({offset: 24}).setText(label));
     }
+}
+
+/**
+ * Returns the first layer of the labels at the top of the basemap. Basemaps like OpenFreeMap Liberty put
+ * symbol layers such as one-way arrows among their roads, and data below those would be drawn under the roads.
+ */
+function topLabelLayer(layers: {id: string; type: string}[]): string | undefined {
+    return layers[layers.findLastIndex(layer => layer.type !== 'symbol') + 1]?.id;
 }
 
 /** A map control that asks the host to show the map fullscreen, or inline again. */

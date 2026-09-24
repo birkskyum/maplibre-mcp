@@ -2,7 +2,9 @@
 
 An MCP server that lets AI agents check, render and show [MapLibre](https://maplibre.org) styles.
 
-![A MapLibre style before and after an agent turned its motorways red, and the pixels that changed](https://birkskyum.github.io/maplibre-mcp/images/compare-z10.webp)
+![A MapLibre style before and after an agent turned its motorways red, and the pixels that changed](https://raw.githubusercontent.com/birkskyum/maplibre-mcp/main/site/public/images/compare-z10.webp)
+
+An agent turned the motorways in OpenFreeMap's Liberty style red, and `compare_styles` showed it the map before, after, and the pixels that changed.
 
 Coding agents like Claude Code, Codex and Cursor can edit a MapLibre style, but they can't see the map, and they can mix up MapLibre and Mapbox. With maplibre-mcp, an agent can validate a style against the MapLibre Style Specification, render it with MapLibre GL JS, MapLibre Native or a Martin server, compare two versions of it, and show you an interactive map in the chat. It runs on your machine and needs no API key.
 

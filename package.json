@@ -1,7 +1,7 @@
 {
   "name": "maplibre-mcp",
   "version": "0.1.0",
-  "description": "MCP server for MapLibre: check, render and show map styles from AI agents",
+  "description": "An MCP server that lets AI agents check, render and show MapLibre styles",
   "license": "MIT",
   "author": "Birk Skyum (https://github.com/birkskyum)",
   "homepage": "https://birkskyum.github.io/maplibre-mcp/",
@@ -12,12 +12,18 @@
   },
   "keywords": [
     "mcp",
+    "mcp-server",
+    "model-context-protocol",
     "maplibre",
     "maplibre-gl",
     "maplibre-native",
     "martin",
     "map",
-    "style"
+    "maps",
+    "style",
+    "gis",
+    "ai",
+    "agent"
   ],
   "engines": {
     "node": ">=22"

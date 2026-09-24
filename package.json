@@ -56,13 +56,15 @@
     }
   },
   "devDependencies": {
+    "@astrojs/markdown-satteri": "^0.4.2",
+    "@astrojs/starlight": "^0.42.4",
     "@maplibre/maplibre-gl-native": "^6.5.0-pre.1",
-    "@tailwindcss/typography": "^0.5.20",
     "@tailwindcss/vite": "^4.3.3",
     "@types/node": "^26.6.2",
     "@types/pngjs": "^6.0.5",
     "astro": "^7.3.5",
     "esbuild": "^0.28.2",
+    "starlight-llms-txt": "^0.12.0",
     "tailwindcss": "^4.3.3",
     "typescript": "^7.0.2",
     "vitest": "^5.0.1"

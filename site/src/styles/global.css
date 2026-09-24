@@ -1,5 +1,4 @@
 @import "tailwindcss" source("..");
-@plugin "@tailwindcss/typography";
 
 @theme {
   --color-brand: #295daa;

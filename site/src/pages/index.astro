@@ -1,31 +1,29 @@
 ---
 import SessionItem from '../components/SessionItem.astro';
 import session from '../data/session.json';
-import {sitePath} from '../docs';
+import {sitePath} from '../paths';
 import Page from '../layouts/Page.astro';
+import {CLIENT_JSON, CURSOR_LINK, INSTALL_COMMANDS, SUMMARY} from '../project';
 
 const CHECK_TOOLS = ['validate_style', 'describe_style_spec', 'describe_sources', 'format_style', 'migrate_style'];
 const SEE_TOOLS = ['render_style', 'compare_styles', 'compare_renderers'];
 const SHOW_TOOLS = ['show_map'];
 
-/** One-line setups for the clients whose command line adds MCP servers. */
-const INSTALL_COMMANDS = [
-    {client: 'Claude Code', command: 'claude mcp add maplibre -- npx -y maplibre-mcp'},
-    {client: 'Codex', command: 'codex mcp add maplibre -- npx -y maplibre-mcp'},
-    {client: 'Gemini CLI', command: 'gemini mcp add maplibre npx -- -y maplibre-mcp'},
-    {client: 'Grok', command: 'grok mcp add maplibre -- npx -y maplibre-mcp'},
-    {client: 'VS Code', command: `code --add-mcp '{"name": "maplibre", "command": "npx", "args": ["-y", "maplibre-mcp"]}'`},
-];
-const SERVER_CONFIG = {command: 'npx', args: ['-y', 'maplibre-mcp']};
-const CURSOR_LINK = `cursor://anysphere.cursor-deeplink/mcp/install?name=maplibre&config=${btoa(JSON.stringify(SERVER_CONFIG))}`;
-const CLIENT_JSON = `{
-  "mcpServers": {
-    "maplibre": {
-      "command": "npx",
-      "args": ["-y", "maplibre-mcp"]
-    }
-  }
-}`;
+/** Describes the software to search engines, as https://schema.org/SoftwareApplication. */
+const STRUCTURED_DATA = {
+    '@context': 'https://schema.org',
+    '@type': 'SoftwareApplication',
+    name: 'maplibre-mcp',
+    description: SUMMARY,
+    url: new URL(sitePath(''), Astro.site).href,
+    applicationCategory: 'DeveloperApplication',
+    operatingSystem: 'macOS, Windows, Linux',
+    softwareRequirements: 'Node.js 22 or newer',
+    isAccessibleForFree: true,
+    license: 'https://opensource.org/licenses/MIT',
+    author: {'@type': 'Person', name: 'Birk Skyum', url: 'https://github.com/birkskyum'},
+    sameAs: ['https://github.com/birkskyum/maplibre-mcp'],
+};
 const TABS = [...INSTALL_COMMANDS.map(install => install.client), 'Cursor', 'Other'];
 
 const BUTTON = 'rounded-full px-5 py-2.5 text-sm font-semibold';
@@ -42,6 +40,7 @@ const COPY_BUTTON = 'shrink-0 rounded bg-slate-700 px-3 py-1 font-sans text-xs t
 ---
 <Page title="maplibre-mcp · MCP server for MapLibre" description="An MCP server that lets AI agents check, render and show MapLibre styles.">
 <link slot="head" rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@6.11.2/dist/maplibre-gl.css">
+<script slot="head" type="application/ld+json" is:inline set:html={JSON.stringify(STRUCTURED_DATA)} />
 
 <main>
   <section class="mx-auto max-w-7xl px-6 pt-16 pb-20 text-center">

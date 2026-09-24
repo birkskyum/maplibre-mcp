@@ -1,8 +1,6 @@
 ---
 title: Getting started
 description: Add maplibre-mcp to your AI client, and try it on a style.
-section: guide
-order: 1
 ---
 
 maplibre-mcp is an MCP server for MapLibre. Your AI client starts it on your machine, and the agent gets tools to validate styles, look up the MapLibre Style Specification, render and compare styles, and show you maps. It needs Node.js 22 or newer, and no API key.

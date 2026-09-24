@@ -1,8 +1,6 @@
 ---
 title: Rendering
 description: The three renderers, what each one needs, and how the camera and comparisons work.
-section: guide
-order: 4
 ---
 
 `render_style`, `compare_styles` and `compare_renderers` draw with a renderer from the toolsets that are on. The `gl-js`, `native` and `martin` toolsets each add one, and the tools take a `renderer` argument to choose between them. The first renderer toolset in `--toolsets` is the default.

@@ -1,8 +1,6 @@
 ---
 title: Remote server
 description: Run maplibre-mcp over Streamable HTTP, and what it allows on a network.
-section: guide
-order: 5
 ---
 
 Usually the client starts maplibre-mcp itself and talks to it over stdio. With `--http`, it runs as a server that clients connect to over Streamable HTTP instead:

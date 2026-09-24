@@ -1,8 +1,6 @@
 ---
 title: Troubleshooting
 description: The errors maplibre-mcp reports, and how to fix them.
-section: guide
-order: 6
 ---
 
 The tools report problems in words the agent can act on, so it often fixes them itself. These are the messages that need you.

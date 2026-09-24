@@ -99,9 +99,7 @@ function page(tools: Tool[]): string {
     const lines = [
         '---',
         'title: Tools',
-        'description: Every tool maplibre-mcp offers, with its parameters.',
-        'section: tools',
-        'order: 3',
+        `description: ${JSON.stringify(`What ${listOf(SECTIONS.flatMap(section => section.tools), 'and', false)} do, and their parameters.`)}`,
         '---',
         '',
         INTRO,
@@ -123,7 +121,7 @@ function findTool(tools: Tool[], name: string): Tool {
 function toolLines({name, description, inputSchema}: Tool): string[] {
     return [
         '',
-        `### \`${name}\``,
+        `### ${name}`,
         '',
         description ?? '',
         '',
@@ -170,8 +168,8 @@ function isSchema(value: unknown): value is Schema {
     return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
-function listOf(values: unknown[], conjunction: string): string {
-    const items = values.map(value => `\`${value}\``);
+function listOf(values: unknown[], conjunction: string, code = true): string {
+    const items = values.map(value => (code ? `\`${value}\`` : String(value)));
     return items.length > 1 ? `${items.slice(0, -1).join(', ')} ${conjunction} ${items.at(-1)}` : items.join('');
 }
 

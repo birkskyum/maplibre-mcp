@@ -1,8 +1,6 @@
 ---
 title: Examples
 description: Real tool calls from agents using maplibre-mcp, and what they returned.
-section: examples
-order: 2
 ---
 
 The agent chooses which tools to call and with what. Each example shows a real call and the result it returned.

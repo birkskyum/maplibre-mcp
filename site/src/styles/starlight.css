@@ -1,0 +1,12 @@
+/* The brand blue as Starlight's accent color, in the dark and the light theme. */
+:root {
+  --sl-color-accent-low: #102a4e;
+  --sl-color-accent: #4f8fe0;
+  --sl-color-accent-high: #c7dbf6;
+}
+
+:root[data-theme='light'] {
+  --sl-color-accent-low: #cfe0f7;
+  --sl-color-accent: #295daa;
+  --sl-color-accent-high: #173663;
+}

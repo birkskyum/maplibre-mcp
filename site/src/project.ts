@@ -6,6 +6,14 @@ export const SUMMARY = [
     'It runs locally with npx and needs no API key.',
 ].join(' ');
 
+/** The links at the top of every page, on the landing page and in the docs. */
+export const NAVIGATION = [
+    {title: 'Guide', path: 'getting-started/'},
+    {title: 'Examples', path: 'examples/'},
+    {title: 'Tools', path: 'tools/'},
+    {title: 'Changelog', path: 'changelog/'},
+];
+
 export const SERVER_CONFIG = {command: 'npx', args: ['-y', 'maplibre-mcp']};
 
 /** One-line setups for the clients whose command line adds MCP servers. */

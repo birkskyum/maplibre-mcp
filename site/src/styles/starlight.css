@@ -1,12 +1,107 @@
-/* The brand blue as Starlight's accent color, in the dark and the light theme. */
+/* The brand blue as Starlight's accent color, and the slate grays of the landing page, in the dark and the light theme. */
 :root {
   --sl-color-accent-low: #102a4e;
   --sl-color-accent: #4f8fe0;
   --sl-color-accent-high: #c7dbf6;
+  --sl-color-gray-1: #f1f5f9;
+  --sl-color-gray-2: #cbd5e1;
+  --sl-color-gray-3: #94a3b8;
+  --sl-color-gray-4: #64748b;
+  --sl-color-gray-5: #334155;
+  --sl-color-gray-6: #1e293b;
+  --sl-color-black: #020617;
+  --sl-color-text-accent: var(--sl-color-accent);
+  --search-background: #0f172a;
 }
 
 :root[data-theme='light'] {
   --sl-color-accent-low: #cfe0f7;
   --sl-color-accent: #295daa;
   --sl-color-accent-high: #173663;
+  --sl-color-white: #0f172a;
+  --sl-color-gray-1: #1e293b;
+  --sl-color-gray-2: #334155;
+  --sl-color-gray-3: #64748b;
+  --sl-color-gray-4: #94a3b8;
+  --sl-color-gray-5: #cbd5e1;
+  --sl-color-gray-6: #e2e8f0;
+  --sl-color-gray-7: #f8fafc;
+  --sl-color-black: #ffffff;
+  --search-background: #f1f5f9;
+}
+
+/* One background for the header, the sidebars and the content, with hairlines between them, and calmer headings. */
+:root {
+  --sl-color-bg-nav: var(--sl-color-bg);
+  --sl-color-bg-sidebar: var(--sl-color-bg);
+  --sl-color-hairline-light: var(--sl-color-gray-6);
+  --sl-color-hairline-shade: var(--sl-color-gray-6);
+  --sl-text-h1: 2rem;
+  --sl-text-h2: 1.5rem;
+  --sl-text-h3: 1.25rem;
+  --sl-text-h4: 1.125rem;
+}
+
+.site-title {
+  font-family: var(--sl-font-mono);
+  font-size: var(--sl-text-sm);
+  color: var(--sl-color-white);
+}
+
+site-search button[data-open-modal] {
+  border-color: transparent;
+  border-radius: 0.5rem;
+  background-color: var(--search-background);
+}
+
+/* No rule under the page title, and one above each section instead. */
+.content-panel + .content-panel {
+  border-top: none;
+  padding-top: 0;
+}
+
+.sl-markdown-content .level-h2 {
+  margin-top: 3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--sl-color-hairline);
+}
+
+/* Sidebar groups as headings between rules, and the current page in the accent color instead of a filled pill. */
+.sidebar-content .top-level > li + li {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--sl-color-hairline);
+}
+
+.sidebar-content .large {
+  font-size: var(--sl-text-sm);
+  font-weight: 700;
+}
+
+.sidebar-content .caret {
+  display: none;
+}
+
+.sidebar-content ul ul li {
+  margin-inline-start: 0;
+  border-inline-start: none;
+  padding-inline-start: 0;
+}
+
+.sidebar-content a[aria-current='page'],
+.sidebar-content a[aria-current='page']:hover,
+.sidebar-content a[aria-current='page']:focus {
+  color: var(--sl-color-text-accent);
+  background-color: transparent;
+}
+
+#starlight__on-this-page {
+  font-size: var(--sl-text-sm);
+}
+
+.sl-menu-button,
+.sl-menu-button:has(~ :popover-open) {
+  background-color: transparent;
+  color: var(--sl-color-white);
+  box-shadow: none;
 }

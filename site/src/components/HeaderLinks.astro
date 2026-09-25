@@ -1,0 +1,35 @@
+---
+import SocialIcons from '@astrojs/starlight/components/SocialIcons.astro';
+import {sitePath} from '../paths';
+import {NAVIGATION} from '../project';
+---
+
+<nav aria-label="Main">
+  {NAVIGATION.map(item => <a href={sitePath(item.path)} aria-current={Astro.url.pathname === sitePath(item.path) ? 'page' : undefined}>{item.title}</a>)}
+</nav>
+<SocialIcons />
+
+<style>
+  nav {
+    display: none;
+    gap: 1.5rem;
+    margin-inline-end: 0.5rem;
+    font-size: var(--sl-text-sm);
+  }
+
+  a {
+    color: var(--sl-color-gray-2);
+    text-decoration: none;
+  }
+
+  a:hover,
+  [aria-current='page'] {
+    color: var(--sl-color-text-accent);
+  }
+
+  @media (min-width: 50rem) {
+    nav {
+      display: flex;
+    }
+  }
+</style>

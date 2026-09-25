@@ -19,8 +19,8 @@ export default defineConfig({
             favicon: '/favicon.svg',
             social: [{icon: 'github', label: 'GitHub', href: 'https://github.com/birkskyum/maplibre-mcp'}],
             customCss: ['./src/styles/starlight.css'],
+            components: {SocialIcons: './src/components/HeaderLinks.astro'},
             head: [{tag: 'meta', attrs: {property: 'og:image', content: `${SITE}${BASE}/images/social.png`}}],
-            expressiveCode: {defaultProps: {wrap: true}},
             sidebar: [
                 {label: 'Guide', items: ['getting-started', 'examples', 'command-line', 'rendering', 'remote-server', 'troubleshooting']},
                 {label: 'Reference', items: ['tools', 'changelog']},

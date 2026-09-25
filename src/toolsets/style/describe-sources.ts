@@ -16,7 +16,7 @@ export type TileJson = {
     vector_layers?: VectorLayer[];
 };
 
-type GeoJson = {
+export type GeoJson = {
     type?: string;
     features?: GeoJson[];
     geometry?: GeoJson | null;
@@ -44,8 +44,8 @@ export function registerDescribeSources(server: McpServer): void {
         description: [
             'Reads the metadata of every source in a MapLibre style (TileJSON, PMTiles headers and GeoJSON data)',
             'and lists the source layers and fields each one provides. Then checks that every layer uses a source,',
-            'source layer and fields that exist. Use it before writing layers against data you do not know,',
-            'and when a layer draws nothing. inspect_tile shows the values the fields take.',
+            'source layer and fields that exist. Use it before writing layers against data you do not know.',
+            'inspect_tile shows the values the fields take, and debug_layers says what each layer draws at a place.',
             'Pass the style as an object, a URL or a file path.',
         ].join(' '),
         inputSchema: z.object(STYLE_INPUT),
@@ -126,7 +126,7 @@ function describeGeoJson(origin: string, data: GeoJson): SourceInfo {
     };
 }
 
-function collectFeatures(data: GeoJson): GeoJson[] {
+export function collectFeatures(data: GeoJson): GeoJson[] {
     if (data.type === 'FeatureCollection') return data.features ?? [];
     if (data.type === 'Feature') return [data];
     return [{type: 'Feature', geometry: data, properties: {}}];
@@ -188,6 +188,13 @@ function fieldsUsedBy(layer: LayerSpecification): Set<string> {
             for (const [, token] of value.matchAll(/\{([^}]+)\}/g)) fields.add(token);
         }
     }
+    return fields;
+}
+
+/** Returns the fields that a filter reads. */
+export function filterFields(filter: unknown): Set<string> {
+    const fields = new Set<string>();
+    collectFields(filter, fields, true);
     return fields;
 }
 

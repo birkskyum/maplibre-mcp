@@ -110,6 +110,16 @@ transportation: 67 features (67 LineString)
 
 So the filter becomes `["==", ["get", "class"], "motorway"]`.
 
+`debug_layers` answers the same question from the other end, for a place. It reads the tiles there and says for each layer whether it draws, and if not, why:
+
+```text
+At [12.57, 55.68], zoom 14: 2 draw nothing.
+Read source "openmaptiles": tile 14/8764/5127, MVT.
+
+buildings (fill): draws nothing, since the tile has no source layer "buildings". It has: boundary, building, housenumber, landcover, landuse, park, place, poi, transportation, transportation_name, water, water_name, waterway.
+motorways (line): draws nothing, since its filter matches none of the 568 features in source layer "transportation". No feature has the field "kind".
+```
+
 ## Look up the style specification
 
 Mapbox GL JS has properties that MapLibre doesn't, and models mix the two up. `describe_style_spec` answers from the MapLibre Style Specification, so it catches a property from Mapbox's lighting, and suggests the closest names for a typo:

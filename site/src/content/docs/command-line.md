@@ -19,6 +19,7 @@ A style is a file or a URL. The commands that render write the image to a file, 
 | `compare <before> <after>` | Renders two versions of a style to `compare.png`, with the pixels that differ in red |
 | `compare-renderers <style>` | Renders the style with two renderers to `renderers.png`, with the pixels that differ in red |
 | `describe-sources <style>` | Lists the source layers and fields of each source, and the layers that use ones that are not there |
+| `debug-layers <style>` | Says which layers draw at a place, and why the others draw nothing |
 | `inspect-tile <source>` | Lists the source layers, geometry types and field values of the vector tile at a place |
 
 ## Options
@@ -35,6 +36,14 @@ The commands that render take the same camera and size as the tools. Without a c
 | `--renderer <name>` | `--renderer native` draws with MapLibre Native, as [Rendering](/maplibre-mcp/rendering/) describes |
 | `--renderers <first,second>` | `--renderers gl-js,native` for `compare-renderers` |
 | `--out <file>` | `--out copenhagen.png` |
+
+## Debug layers
+
+`debug-layers` checks every layer of the style at the place, or at the style's own center and zoom. `--layers` checks only the layers named.
+
+```sh
+npx -y maplibre-mcp debug-layers style.json --center 12.57,55.68 --zoom 14 --layers buildings,motorways
+```
 
 ## Inspect a tile
 

@@ -33,6 +33,6 @@ describe('createServer', () => {
     test('offers no render_style without a renderer', async () => {
         const client = await connect('style');
         const {tools} = await client.listTools();
-        expect(tools.map(tool => tool.name)).toEqual(['validate_style', 'describe_style_spec', 'describe_sources', 'inspect_tile', 'format_style', 'migrate_style']);
+        expect(tools.map(tool => tool.name)).toEqual(['validate_style', 'describe_style_spec', 'describe_sources', 'inspect_tile', 'debug_layers', 'format_style', 'migrate_style']);
     });
 });

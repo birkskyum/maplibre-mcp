@@ -172,6 +172,102 @@ describe('inspect_tile', () => {
     });
 });
 
+describe('debug_layers', () => {
+    let server: Server;
+    let origin: string;
+
+    beforeAll(async () => {
+        const roads = geoJSONToTile({type: 'FeatureCollection', features: [
+            {type: 'Feature', geometry: {type: 'LineString', coordinates: [[0, 0], [10, 10]]}, properties: {class: 'primary'}},
+            {type: 'Feature', geometry: {type: 'LineString', coordinates: [[0, 10], [10, 0]]}, properties: {class: 'primary'}},
+            {type: 'Feature', geometry: {type: 'LineString', coordinates: [[5, 0], [5, 10]]}, properties: {class: 'minor'}},
+        ]}, 0, 0, 0);
+        const water = geoJSONToTile({type: 'Feature', geometry: {type: 'Polygon', coordinates: [[[0, 0], [10, 0], [10, 10], [0, 10], [0, 0]]]}, properties: {}}, 0, 0, 0);
+        ({server, origin} = await serveJson({
+            '/tiles.json': {tiles: ['/{z}/{x}/{y}.pbf'], maxzoom: 0},
+            '/0/0/0.pbf': fromGeojsonVt({roads, water}),
+            '/sprite.json': {cafe: {x: 0, y: 0, width: 16, height: 16, pixelRatio: 1}},
+        }));
+    });
+
+    afterAll(() => {
+        server.close();
+    });
+
+    test('says which layers draw at a place', async () => {
+        const client = await connect('style');
+        const text = textOf(await client.callTool({name: 'debug_layers', arguments: {center: [5, 5], zoom: 3, style: {
+            version: 8,
+            sources: {streets: {type: 'vector', url: `${origin}/tiles.json`}},
+            layers: [{id: 'water', type: 'fill', source: 'streets', 'source-layer': 'water'}],
+        }}}));
+        expect(text).toContain('At [5, 5], zoom 3: 1 layer draws.');
+        expect(text).toContain('water (fill): draws 1 of the 1 feature in source layer "water".');
+    });
+
+    test('lists the values the data has when a filter matches nothing', async () => {
+        const client = await connect('style');
+        const text = textOf(await client.callTool({name: 'debug_layers', arguments: {center: [5, 5], zoom: 3, style: {
+            version: 8,
+            sources: {streets: {type: 'vector', url: `${origin}/tiles.json`}},
+            layers: [{id: 'motorways', type: 'line', source: 'streets', 'source-layer': 'roads', filter: ['==', ['get', 'class'], 'motorway']}],
+        }}}));
+        expect(text).toContain('motorways (line): draws nothing, since its filter matches none of the 3 features in source layer "roads".');
+        expect(text).toContain('  roads.class: "primary" (2), "minor" (1)');
+    });
+
+    test('names a field of a filter that no feature has', async () => {
+        const client = await connect('style');
+        const text = textOf(await client.callTool({name: 'debug_layers', arguments: {center: [5, 5], zoom: 3, style: {
+            version: 8,
+            sources: {streets: {type: 'vector', url: `${origin}/tiles.json`}},
+            layers: [{id: 'highways', type: 'line', source: 'streets', 'source-layer': 'roads', filter: ['==', ['get', 'kind'], 'highway']}],
+        }}}));
+        expect(text).toContain('No feature has the field "kind".');
+    });
+
+    test('finds a source layer the tile lacks', async () => {
+        const client = await connect('style');
+        const text = textOf(await client.callTool({name: 'debug_layers', arguments: {center: [5, 5], zoom: 3, style: {
+            version: 8,
+            sources: {streets: {type: 'vector', url: `${origin}/tiles.json`}},
+            layers: [{id: 'buildings', type: 'fill', source: 'streets', 'source-layer': 'buildings'}],
+        }}}));
+        expect(text).toContain('buildings (fill): draws nothing, since the tile has no source layer "buildings". It has: roads, water.');
+    });
+
+    test('finds a fill layer on data without polygons', async () => {
+        const client = await connect('style');
+        const text = textOf(await client.callTool({name: 'debug_layers', arguments: {center: [5, 5], zoom: 3, style: {
+            version: 8,
+            sources: {streets: {type: 'vector', url: `${origin}/tiles.json`}},
+            layers: [{id: 'road-areas', type: 'fill', source: 'streets', 'source-layer': 'roads'}],
+        }}}));
+        expect(text).toContain('road-areas (fill): draws nothing, since it matches 3 of the 3 features in source layer "roads", but none are polygons, which a fill layer needs.');
+    });
+
+    test('finds paint that hides a layer at the zoom', async () => {
+        const client = await connect('style');
+        const text = textOf(await client.callTool({name: 'debug_layers', arguments: {center: [5, 5], zoom: 3, style: {
+            version: 8,
+            sources: {streets: {type: 'vector', url: `${origin}/tiles.json`}},
+            layers: [{id: 'roads', type: 'line', source: 'streets', 'source-layer': 'roads', paint: {'line-width': ['interpolate', ['linear'], ['zoom'], 5, 0, 10, 4]}}],
+        }}}));
+        expect(text).toContain('roads (line): draws nothing, since line-width is 0 at zoom 3.');
+    });
+
+    test('finds icons the sprite lacks', async () => {
+        const client = await connect('style');
+        const text = textOf(await client.callTool({name: 'debug_layers', arguments: {center: [5, 5], zoom: 3, style: {
+            version: 8,
+            sources: {streets: {type: 'vector', url: `${origin}/tiles.json`}},
+            sprite: `${origin}/sprite`,
+            layers: [{id: 'shops', type: 'symbol', source: 'streets', 'source-layer': 'roads', layout: {'icon-image': '{class}_shop'}}],
+        }}}));
+        expect(text).toContain('shops (symbol): draws nothing, since the sprite has none of the icons it uses, like "primary_shop", "minor_shop".');
+    });
+});
+
 describe('format_style', () => {
     test('formats a style file in place', async () => {
         const file = path.join(await mkdtemp(path.join(tmpdir(), 'maplibre-mcp-')), 'style.json');

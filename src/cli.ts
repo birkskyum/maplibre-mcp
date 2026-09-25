@@ -37,6 +37,10 @@ export const COMMANDS: Record<string, Command> = {
         tool: 'describe_sources', usage: 'describe-sources <style>',
         description: 'List the source layers and fields, and the layers that use ones that are not there',
     },
+    'debug-layers': {
+        tool: 'debug_layers', usage: 'debug-layers <style>',
+        description: 'Say which layers draw at a place, and why the others draw nothing',
+    },
     'inspect-tile': {
         tool: 'inspect_tile', usage: 'inspect-tile <source>', readsSource: true,
         description: 'List the source layers, geometry types and field values of the vector tile at a place',
@@ -56,6 +60,7 @@ const OPTIONS = {
     out: {type: 'string'},
     source: {type: 'string'},
     layer: {type: 'string'},
+    layers: {type: 'string'},
     examples: {type: 'string'},
 } as const;
 
@@ -120,6 +125,7 @@ function toolArguments(options: Options): Record<string, unknown> {
         if (value !== undefined) args[name] = value.split(',').map(item => toNumber(name, item));
     }
     if (options.layer) args.layer = options.layer;
+    if (options.layers) args.layers = options.layers.split(',');
     if (options.renderer) args.renderer = options.renderer;
     if (options.renderers) args.renderers = options.renderers.split(',');
     return args;

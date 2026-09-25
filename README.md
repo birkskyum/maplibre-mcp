@@ -46,6 +46,7 @@ npx -y maplibre-mcp render style.json --center 12.57,55.68 --zoom 12
 npx -y maplibre-mcp compare before.json after.json --zoom 10
 npx -y maplibre-mcp compare-renderers style.json --renderers gl-js,native
 npx -y maplibre-mcp describe-sources style.json
+npx -y maplibre-mcp debug-layers style.json --center 12.57,55.68 --zoom 14
 npx -y maplibre-mcp inspect-tile https://tiles.openfreemap.org/planet --center 12.57,55.68 --zoom 14
 ```
 
@@ -57,6 +58,7 @@ The images go to `map.png`, `compare.png` and `renderers.png`, or to `--out`. `n
 - `describe_style_spec` looks up a layer type, property, source type or expression, with its documentation and the GL JS and Native versions that support it. For a misspelled name, it suggests the closest real ones.
 - `describe_sources` reads the TileJSON, PMTiles header or GeoJSON of each source in a style, lists the source layers and fields, and finds layers that use a source layer or field that is not there.
 - `inspect_tile` reads the vector tile at a place and lists each source layer with its geometry types, the values of its fields and how often they occur, and a few example features. The source can be a source in a style, a TileJSON URL like a Martin source, a PMTiles archive or a tile URL, with MVT or MLT tiles.
+- `debug_layers` says for each layer of a style whether it draws at a place and zoom, and if not, why, like a missing source layer, a filter that matches nothing (next to the values the data has), a fill layer without polygons, paint that comes out as 0 or transparent, or icons missing from the sprite.
 - `format_style` and `migrate_style` do what `gl-style-format` and `gl-style-migrate` do. Given a file, they rewrite it.
 - `render_style` renders a style to a PNG, and reports map errors and missing icons. It takes a center, zoom, bearing and pitch, or bounds to fit.
 - `compare_styles` renders two versions of a style at the same camera, and returns one image with the style before, after, and their differences in red.
@@ -76,7 +78,7 @@ npx -y maplibre-mcp --toolsets style,gl-js,martin
 
 | Toolset | What it adds |
 | --- | --- |
-| `style` | `validate_style`, `describe_style_spec`, `describe_sources`, `inspect_tile`, `format_style`, `migrate_style` |
+| `style` | `validate_style`, `describe_style_spec`, `describe_sources`, `inspect_tile`, `debug_layers`, `format_style`, `migrate_style` |
 | `gl-js` | Rendering with MapLibre GL JS, and `show_map` |
 | `native` | Rendering with MapLibre Native |
 | `martin` | Rendering with a Martin server, and `martin_list_sources` |

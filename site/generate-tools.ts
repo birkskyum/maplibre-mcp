@@ -52,7 +52,7 @@ const SECTIONS: Section[] = [
     {
         title: 'Check styles and data',
         text: 'These tools are in the `style` toolset, which is on by default. `format_style` and `migrate_style` write to the file given in `path`, and the others only read.',
-        tools: ['validate_style', 'describe_style_spec', 'describe_sources', 'inspect_tile', 'format_style', 'migrate_style'],
+        tools: ['validate_style', 'describe_style_spec', 'describe_sources', 'inspect_tile', 'debug_layers', 'format_style', 'migrate_style'],
     },
     {
         title: 'Render and compare',

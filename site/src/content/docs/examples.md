@@ -96,6 +96,20 @@ Problems:
   Layer "motorways" reads the field "kind", which "openmaptiles" does not list for "transportation".
 ```
 
+To fix the filter, the agent needs to know what the roads are called. `inspect_tile` reads the tile over Copenhagen at zoom 10 and counts the values of each field:
+
+```text
+Tile 10/547/320 of https://tiles.openfreemap.org/planet, at [12.57, 55.68], MVT, 102.5 kB.
+
+transportation: 67 features (67 LineString)
+  subclass (in 5 of 67): "rail" (5)
+  brunnel (in 8 of 67): "tunnel" (6), "bridge" (2)
+  class: "primary" (28), "secondary" (19), "motorway" (10), "rail" (5), "trunk_construction" (2), "trunk" (2), "ferry" (1)
+  ramp (in 21 of 67): 1 (21)
+```
+
+So the filter becomes `["==", ["get", "class"], "motorway"]`.
+
 ## Look up the style specification
 
 Mapbox GL JS has properties that MapLibre doesn't, and models mix the two up. `describe_style_spec` answers from the MapLibre Style Specification, so it catches a property from Mapbox's lighting, and suggests the closest names for a typo:

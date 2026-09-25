@@ -13,12 +13,16 @@ export async function connect(toolsets: string): Promise<Client> {
     return client;
 }
 
-/** Serves JSON documents by path on a local port, and resolves to the server's origin. */
+/** Serves JSON documents, and tiles given as bytes, by path on a local port, and resolves to the server's origin. */
 export function serveJson(documents: Record<string, unknown>): Promise<{origin: string; server: Server}> {
     const server = createHttpServer((request, response) => {
         const document = documents[request.url ?? ''];
         if (document === undefined) {
             response.writeHead(404).end();
+            return;
+        }
+        if (document instanceof Uint8Array) {
+            response.writeHead(200, {'content-type': 'application/x-protobuf'}).end(document);
             return;
         }
         response.writeHead(200, {'content-type': 'application/json'}).end(JSON.stringify(document));

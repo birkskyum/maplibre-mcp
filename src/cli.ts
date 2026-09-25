@@ -15,6 +15,8 @@ type Command = {
     twoStyles?: boolean;
     /** The file an image result goes to, unless `--out` names another. */
     image?: string;
+    /** Whether the command takes a vector source, or a style when `--source` names one of its sources. */
+    readsSource?: boolean;
 };
 
 /** Only the tools that nothing else offers on the command line; the style spec has `gl-style-validate` and friends. */
@@ -35,6 +37,10 @@ export const COMMANDS: Record<string, Command> = {
         tool: 'describe_sources', usage: 'describe-sources <style>',
         description: 'List the source layers and fields, and the layers that use ones that are not there',
     },
+    'inspect-tile': {
+        tool: 'inspect_tile', usage: 'inspect-tile <source>', readsSource: true,
+        description: 'List the source layers, geometry types and field values of the vector tile at a place',
+    },
 };
 
 const OPTIONS = {
@@ -48,11 +54,17 @@ const OPTIONS = {
     renderer: {type: 'string'},
     renderers: {type: 'string'},
     out: {type: 'string'},
+    source: {type: 'string'},
+    layer: {type: 'string'},
+    examples: {type: 'string'},
 } as const;
 
 type Options = {[Name in keyof typeof OPTIONS]?: string};
 
-const NUMBER_OPTIONS = ['zoom', 'bearing', 'pitch', 'width', 'height'] as const;
+const STYLE_HELP = 'A style is a file or a URL.';
+const SOURCE_HELP = 'A source is a TileJSON URL, a PMTiles archive or a tile URL, or a style with --source <id>.';
+
+const NUMBER_OPTIONS = ['zoom', 'bearing', 'pitch', 'width', 'height', 'examples'] as const;
 const LIST_OPTIONS = ['center', 'bounds'] as const;
 
 export function isCommand(name: string): boolean {
@@ -64,10 +76,11 @@ export async function runCommand(name: string, args: string[]): Promise<number> 
     const command = COMMANDS[name];
     const {values, positionals} = parseArgs({args, options: OPTIONS, allowPositionals: true});
     const styles = command.twoStyles ? 2 : 1;
-    if (positionals.length !== styles) throw new Error(`Usage: maplibre-mcp ${command.usage}. A style is a file or a URL.`);
+    if (positionals.length !== styles) throw new Error(`Usage: maplibre-mcp ${command.usage}. ${command.readsSource ? SOURCE_HELP : STYLE_HELP}`);
 
+    const target = command.readsSource ? sourceArguments(positionals[0], values.source) : styleArguments(positionals);
     const client = await connectInProcess();
-    const result = await client.callTool({name: command.tool, arguments: {...styleArguments(positionals), ...toolArguments(values)}});
+    const result = await client.callTool({name: command.tool, arguments: {...target, ...toolArguments(values)}});
     const lines = await outputLines(result, values.out ?? command.image);
     for (const line of lines) (result.isError ? console.error : console.log)(line);
     return result.isError ? 1 : 0;
@@ -79,6 +92,11 @@ async function connectInProcess(): Promise<Client> {
     const client = new Client({name: 'maplibre-mcp', version: pkg.version});
     await client.connect(clientTransport);
     return client;
+}
+
+/** Takes the argument as the source, or as a style when `--source` gives the id of one of its sources. */
+function sourceArguments(argument: string, source: string | undefined): Record<string, unknown> {
+    return source === undefined ? {source: argument} : {...styleInput(argument), source};
 }
 
 function styleArguments(positionals: string[]): Record<string, unknown> {
@@ -101,6 +119,7 @@ function toolArguments(options: Options): Record<string, unknown> {
         const value = options[name];
         if (value !== undefined) args[name] = value.split(',').map(item => toNumber(name, item));
     }
+    if (options.layer) args.layer = options.layer;
     if (options.renderer) args.renderer = options.renderer;
     if (options.renderers) args.renderers = options.renderers.split(',');
     return args;

@@ -5,7 +5,7 @@ import {sitePath} from '../paths';
 import Page from '../layouts/Page.astro';
 import {CLIENT_JSON, CURSOR_LINK, INSTALL_COMMANDS, SUMMARY} from '../project';
 
-const CHECK_TOOLS = ['validate_style', 'describe_style_spec', 'describe_sources', 'format_style', 'migrate_style'];
+const CHECK_TOOLS = ['validate_style', 'describe_style_spec', 'describe_sources', 'inspect_tile', 'format_style', 'migrate_style'];
 const SEE_TOOLS = ['render_style', 'compare_styles', 'compare_renderers'];
 const SHOW_TOOLS = ['show_map'];
 
@@ -148,7 +148,7 @@ const COPY_BUTTON = 'shrink-0 rounded bg-slate-700 px-3 py-1 font-sans text-xs t
             <h3 class="text-xl font-semibold">Check</h3>
             <p class="mt-2 text-slate-600 dark:text-slate-300">
               Validate a style against the MapLibre Style Specification, look up any property or expression with the GL JS and Native versions that support it,
-              and find layers that use a source layer or field the data does not have.
+              find layers that use a source layer or field the data does not have, and read the values the tiles really hold.
             </p>
             <p class={TOOL_LIST}>{CHECK_TOOLS.map((tool, index) => <>{index > 0 && ' · '}<a href={sitePath(`tools/#${tool}`)} class="hover:text-brand">{tool}</a></>)}</p>
           </div>
@@ -164,6 +164,10 @@ const COPY_BUTTON = 'shrink-0 rounded bg-slate-700 px-3 py-1 font-sans text-xs t
             <div class={OUTPUT_CARD}>
               <p class="text-sky-300">describe_sources</p>
               <p class="mt-1">Layer "motorways" reads the field "kind", which "omt" does not list for "transportation".</p>
+            </div>
+            <div class={OUTPUT_CARD}>
+              <p class="text-sky-300">inspect_tile {`{"layer": "transportation"}`}</p>
+              <p class="mt-1">class: "primary" (28), "secondary" (19), "motorway" (10), "rail" (5), ...</p>
             </div>
           </div>
         </div>

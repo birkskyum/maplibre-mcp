@@ -42,7 +42,7 @@ export async function returnStyle(input: StyleInput, json: string, action: strin
     return {content: [{type: 'text', text: `${action} ${input.path}.`}]};
 }
 
-function checkFileAccess(path: string): string {
+export function checkFileAccess(path: string): string {
     if (!fileAccess) {
         throw new Error('This server does not read or write files, since other machines can reach it. Pass the style as an object or a URL.');
     }

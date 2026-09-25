@@ -1,3 +1,6 @@
+import {geoJSONToTile} from '@maplibre/geojson-vt';
+import {encodeTile} from '@maplibre/mlt';
+import {fromGeojsonVt} from '@maplibre/vt-pbf';
 import {mkdtemp, readFile, writeFile} from 'node:fs/promises';
 import type {Server} from 'node:http';
 import {tmpdir} from 'node:os';
@@ -112,6 +115,60 @@ describe('describe_sources', () => {
             layers: [{id: 'dots', type: 'circle', source: 'cities', paint: {'circle-radius': ['get', 'population']}}],
         }}}));
         expect(text).toContain('Layer "dots" reads the field "population", which "cities" does not list.');
+    });
+});
+
+describe('inspect_tile', () => {
+    let server: Server;
+    let origin: string;
+
+    beforeAll(async () => {
+        const roads = geoJSONToTile({type: 'FeatureCollection', features: [
+            {type: 'Feature', geometry: {type: 'LineString', coordinates: [[0, 0], [10, 10]]}, properties: {class: 'primary'}},
+            {type: 'Feature', geometry: {type: 'LineString', coordinates: [[0, 10], [10, 0]]}, properties: {class: 'primary'}},
+            {type: 'Feature', geometry: {type: 'LineString', coordinates: [[5, 0], [5, 10]]}, properties: {class: 'minor', oneway: 1}},
+        ]}, 0, 0, 0);
+        const places = encodeTile([{name: 'places', extent: 4096, features: [
+            {geometry: {type: 'Point', coordinates: [100, 100]}, properties: {kind: 'city'}},
+            {geometry: {type: 'Point', coordinates: [200, 300]}, properties: {kind: 'town'}},
+        ]}]);
+        ({server, origin} = await serveJson({
+            '/roads.json': {tiles: ['/roads/{z}/{x}/{y}.pbf'], maxzoom: 0},
+            '/roads/0/0/0.pbf': fromGeojsonVt({roads}),
+            '/places/0/0/0.mlt': places,
+        }));
+    });
+
+    afterAll(() => {
+        server.close();
+    });
+
+    test('lists the values of each field in a tile', async () => {
+        const client = await connect('style');
+        const text = textOf(await client.callTool({name: 'inspect_tile', arguments: {source: `${origin}/roads.json`, center: [5, 5], zoom: 3}}));
+        expect(text).toContain('The source has no tiles above zoom 0, so maps show this tile at zoom 3 too.');
+        expect(text).toContain('roads: 3 features (3 LineString)\n  class: "primary" (2), "minor" (1)\n  oneway (in 1 of 3): 1 (1)');
+    });
+
+    test('reads the MLT tiles of a style source', async () => {
+        const client = await connect('style');
+        const text = textOf(await client.callTool({name: 'inspect_tile', arguments: {
+            style: {version: 8, sources: {places: {type: 'vector', tiles: [`${origin}/places/{z}/{x}/{y}.mlt`], maxzoom: 0, encoding: 'mlt'}}, layers: []},
+            center: [0, 0],
+            zoom: 0,
+        }}));
+        expect(text).toContain(`Tile 0/0/0 of source "places" (${origin}/places/{z}/{x}/{y}.mlt), at [0, 0], MLT`);
+        expect(text).toContain('places: 2 features (2 Point)\n  kind: "city" (1), "town" (1)');
+    });
+
+    test('explains that it reads vector tiles', async () => {
+        const client = await connect('style');
+        const result = await client.callTool({name: 'inspect_tile', arguments: {
+            style: {version: 8, sources: {satellite: {type: 'raster', tiles: [`${origin}/{z}/{x}/{y}.png`]}}, layers: []},
+            source: 'satellite',
+        }});
+        expect(result.isError).toBe(true);
+        expect(textOf(result)).toContain('"satellite" is a raster source, and inspect_tile reads vector tiles.');
     });
 });
 

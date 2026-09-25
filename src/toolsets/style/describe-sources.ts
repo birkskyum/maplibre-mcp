@@ -6,11 +6,13 @@ import {fetchJson, loadStyle, STYLE_INPUT} from '../../style-input.js';
 
 type VectorLayer = {id: string; fields?: Record<string, string>};
 
-type TileJson = {
+export type TileJson = {
     tiles?: string[];
     minzoom?: number;
     maxzoom?: number;
     tileSize?: number;
+    scheme?: string;
+    center?: number[];
     vector_layers?: VectorLayer[];
 };
 
@@ -43,7 +45,8 @@ export function registerDescribeSources(server: McpServer): void {
             'Reads the metadata of every source in a MapLibre style (TileJSON, PMTiles headers and GeoJSON data)',
             'and lists the source layers and fields each one provides. Then checks that every layer uses a source,',
             'source layer and fields that exist. Use it before writing layers against data you do not know,',
-            'and when a layer draws nothing. Pass the style as an object, a URL or a file path.',
+            'and when a layer draws nothing. inspect_tile shows the values the fields take.',
+            'Pass the style as an object, a URL or a file path.',
         ].join(' '),
         inputSchema: z.object(STYLE_INPUT),
         annotations: {readOnlyHint: true, openWorldHint: true},
@@ -135,14 +138,24 @@ function collectFeatures(data: GeoJson): GeoJson[] {
  */
 function summarizeFields(fields: string[]): string {
     if (fields.length === 0) return '(none listed)';
+    return [...fieldFamilies(fields)]
+        .flatMap(([family, members]) => isFolded(family, members) ? [`${family} (${members.length} fields)`] : members)
+        .join(', ');
+}
+
+/** Groups fields by family, like `name:*` for `name:de` and `name:fr`, or `route_*_ref` for `route_1_ref`. */
+export function fieldFamilies(fields: string[]): Map<string, string[]> {
     const families = new Map<string, string[]>();
     for (const field of fields) {
         const family = field.includes('name:') ? field.replace(/name:.*$/, 'name:*') : field.replace(/\d+/g, '*');
         families.set(family, [...families.get(family) ?? [], field]);
     }
-    return [...families]
-        .flatMap(([family, members]) => members.length > 3 && family.includes('*') ? [`${family} (${members.length} fields)`] : members)
-        .join(', ');
+    return families;
+}
+
+/** Whether a family of fields is large enough to show as one entry. */
+export function isFolded(family: string, members: string[]): boolean {
+    return members.length > 3 && family.includes('*');
 }
 
 function checkLayer(layer: LayerSpecification, style: StyleSpecification, infos: Record<string, SourceInfo>): string[] {

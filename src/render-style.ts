@@ -122,11 +122,11 @@ function fitBounds([west, south, east, north]: number[], width: number, height: 
     return {center: [lngFromMercatorX((x1 + x2) / 2), latFromMercatorY((y1 + y2) / 2)], zoom};
 }
 
-function mercatorX(lng: number): number {
+export function mercatorX(lng: number): number {
     return (180 + lng) / 360;
 }
 
-function mercatorY(lat: number): number {
+export function mercatorY(lat: number): number {
     return (180 - (180 / Math.PI) * Math.log(Math.tan(Math.PI / 4 + (lat * Math.PI) / 360))) / 360;
 }
 

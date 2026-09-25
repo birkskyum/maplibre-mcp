@@ -76,6 +76,11 @@ function usage(): string {
         '  --renderer <gl-js|native|martin>, or --renderers <first,second> to compare',
         '  --out <file.png>, where the image goes',
         '',
+        'Options of inspect-tile, which reads a TileJSON URL, a PMTiles archive or a tile URL:',
+        '  --center <lng,lat> --zoom <zoom>, the place to read, by default the source\'s center at its highest zoom',
+        '  --source <id>, to read a source of the style given instead',
+        '  --layer <name> --examples <count>',
+        '',
         'To validate, format or migrate a style, use gl-style-validate, gl-style-format and gl-style-migrate',
         'from @maplibre/maplibre-gl-style-spec.',
     ].join('\n');

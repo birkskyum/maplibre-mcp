@@ -55,7 +55,7 @@ styles:
   rendering: true
 ```
 
-`martin_list_sources` lists the sources, sprites, fonts and styles of the server at `MARTIN_URL`, or `http://localhost:3000`.
+`martin_list_sources` lists the sources, sprites, fonts and styles of the server at `MARTIN_URL`, or `http://localhost:3000`. `inspect_tile` reads the tiles of a Martin source from its TileJSON URL, like `http://localhost:3000/roads`, and lists the values of its fields.
 
 ## Camera and size
 

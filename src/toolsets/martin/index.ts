@@ -29,8 +29,8 @@ function registerListSources(server: McpServer): void {
         title: 'List Martin sources',
         description: [
             'Lists the tile sources, sprites, fonts and styles that a Martin tile server serves,',
-            'with the URLs to put in a MapLibre style. Follow up with describe_sources on a style',
-            'that uses a tile source, to see its source layers and fields.',
+            'with the URLs to put in a MapLibre style. Follow up with inspect_tile on the TileJSON URL',
+            'of a tile source, to see its source layers, geometry types and the values of its fields.',
         ].join(' '),
         inputSchema: z.object({
             url: z.url().optional().describe(`Base URL of the Martin server. Defaults to MARTIN_URL, or ${DEFAULT_URL}.`),

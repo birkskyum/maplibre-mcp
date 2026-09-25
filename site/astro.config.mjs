@@ -23,7 +23,7 @@ export default defineConfig({
             expressiveCode: {defaultProps: {wrap: true}},
             sidebar: [
                 {label: 'Guide', items: ['getting-started', 'examples', 'command-line', 'rendering', 'remote-server', 'troubleshooting']},
-                {label: 'Reference', items: ['tools']},
+                {label: 'Reference', items: ['tools', 'changelog']},
             ],
             plugins: [
                 starlightLlmsTxt({
@@ -33,7 +33,7 @@ export default defineConfig({
                         ...INSTALL_COMMANDS.map(install => `- ${install.client}: \`${install.command}\``),
                         '- Claude Desktop, Cursor, Windsurf and most other clients: `{"mcpServers": {"maplibre": {"command": "npx", "args": ["-y", "maplibre-mcp"]}}}`',
                         '',
-                        'Agents with a shell can also run the rendering tools as commands, without MCP, like `npx -y maplibre-mcp render style.json --center 12.57,55.68 --zoom 12`, which writes map.png.',
+                        'Agents with a shell can also run the rendering and data tools as commands, without MCP, like `npx -y maplibre-mcp render style.json --center 12.57,55.68 --zoom 12`, which writes map.png.',
                     ].join('\n'),
                     optionalLinks: [{label: 'Source code', url: 'https://github.com/birkskyum/maplibre-mcp'}],
                     promote: ['getting-started', 'examples'],

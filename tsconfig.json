@@ -11,5 +11,5 @@
     "verbatimModuleSyntax": true,
     "skipLibCheck": true
   },
-  "include": ["src", "test", "build.ts", "vitest.config.ts", "site/generate-tools.ts"]
+  "include": ["src", "test", "build.ts", "vitest.config.ts", "site/generate-tools.ts", "site/generate-changelog.ts"]
 }

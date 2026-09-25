@@ -36,8 +36,8 @@
   ],
   "scripts": {
     "build": "tsc && node build.ts",
-    "build:site": "npm run build && node site/generate-tools.ts && cd site && astro build",
-    "dev:site": "npm run build && node site/generate-tools.ts && cd site && astro dev",
+    "build:site": "npm run build && node site/generate-tools.ts && node site/generate-changelog.ts && cd site && astro build",
+    "dev:site": "npm run build && node site/generate-tools.ts && node site/generate-changelog.ts && cd site && astro dev",
     "test": "npm run build && vitest run",
     "prepublishOnly": "npm test"
   },

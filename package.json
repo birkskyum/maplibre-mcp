@@ -42,6 +42,7 @@
     "prepublishOnly": "npm test"
   },
   "dependencies": {
+    "@mapbox/point-geometry": "^1.1.0",
     "@mapbox/vector-tile": "^3.0.0",
     "@maplibre/maplibre-gl-style-spec": "^26.4.4",
     "@modelcontextprotocol/client": "^2.1.0",

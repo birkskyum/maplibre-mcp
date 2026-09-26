@@ -87,7 +87,7 @@ export function isCommand(name: string): boolean {
 /** Runs a command, prints the text of the result, writes its image to a file, and resolves to the exit code. */
 export async function runCommand(name: string, args: string[]): Promise<number> {
     const command = COMMANDS[name];
-    const {values, positionals} = parseArgs({args, options: OPTIONS, allowPositionals: true});
+    const {values, positionals} = parseArgs({args: joinNegativeValues(args), options: OPTIONS, allowPositionals: true});
     const styles = command.twoStyles ? 2 : 1;
     if (positionals.length !== styles) throw new Error(`Usage: maplibre-mcp ${command.usage}. ${argumentHelp(command)}`);
 
@@ -97,6 +97,24 @@ export async function runCommand(name: string, args: string[]): Promise<number> 
     const lines = await outputLines(result, values.out ?? command.image);
     for (const line of lines) (result.isError ? console.error : console.log)(line);
     return result.isError ? 1 : 0;
+}
+
+/**
+ * Joins each option with a value that starts with a minus, like `--center -74,40.7`, which parseArgs takes for another
+ * option. Every option of the commands takes a value, so a negative number after one is always its value.
+ */
+function joinNegativeValues(args: string[]): string[] {
+    const joined: string[] = [];
+    for (let index = 0; index < args.length; index++) {
+        const next = args[index + 1];
+        if (args[index].startsWith('--') && !args[index].includes('=') && next !== undefined && /^-\.?\d/.test(next)) {
+            joined.push(`${args[index]}=${next}`);
+            index++;
+        } else {
+            joined.push(args[index]);
+        }
+    }
+    return joined;
 }
 
 function argumentHelp(command: Command): string {

@@ -47,6 +47,14 @@ describe('command line', () => {
         expect(stdout).toContain('places: 1 feature (1 Point)\n  kind: "city" (1)');
     });
 
+    test('takes negative coordinates', async () => {
+        const places = encodeTile([{name: 'places', extent: 4096, features: [{geometry: {type: 'Point', coordinates: [100, 100]}, properties: {kind: 'city'}}]}]);
+        const {origin, server} = await serveJson({'/0/0/0.mlt': places});
+        const {stdout} = await run(process.execPath, [CLI, 'inspect-tile', `${origin}/{z}/{x}/{y}.mlt`, '--center', '-74,-40.7', '--zoom', '0'], {cwd: dir});
+        server.close();
+        expect(stdout).toContain('at [-74, -40.7]');
+    });
+
     test('looks up a method of GL JS', async () => {
         const {stdout} = await run(process.execPath, [CLI, 'describe-gl-js-api', 'Map#flyTo']);
         expect(stdout).toContain('flyTo(options: FlyToOptions, eventData?: any): this');

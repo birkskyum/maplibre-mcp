@@ -187,6 +187,7 @@ describe('debug_layers', () => {
             '/tiles.json': {tiles: ['/{z}/{x}/{y}.pbf'], maxzoom: 0},
             '/0/0/0.pbf': fromGeojsonVt({roads, water}),
             '/sprite.json': {cafe: {x: 0, y: 0, width: 16, height: 16, pixelRatio: 1}},
+            '/fonts/Noto%20Sans%20Regular/0-255.pbf': new Uint8Array(),
         }));
     });
 
@@ -265,6 +266,33 @@ describe('debug_layers', () => {
             layers: [{id: 'shops', type: 'symbol', source: 'streets', 'source-layer': 'roads', layout: {'icon-image': '{class}_shop'}}],
         }}}));
         expect(text).toContain('shops (symbol): draws nothing, since the sprite has none of the icons it uses, like "primary_shop", "minor_shop".');
+    });
+
+    test('finds font stacks the glyph server lacks', async () => {
+        const client = await connect('style');
+        const text = textOf(await client.callTool({name: 'debug_layers', arguments: {center: [5, 5], zoom: 3, style: {
+            version: 8,
+            sources: {streets: {type: 'vector', url: `${origin}/tiles.json`}},
+            glyphs: `${origin}/fonts/{fontstack}/{range}.pbf`,
+            layers: [
+                {id: 'regular', type: 'symbol', source: 'streets', 'source-layer': 'roads', layout: {'text-field': ['get', 'class'], 'text-font': ['Noto Sans Regular']}},
+                {id: 'bold', type: 'symbol', source: 'streets', 'source-layer': 'roads', layout: {'text-field': ['get', 'class'], 'text-font': ['Noto Sans Bold']}},
+                {id: 'unset', type: 'symbol', source: 'streets', 'source-layer': 'roads', layout: {'text-field': ['get', 'class']}},
+            ],
+        }}}));
+        expect(text).toContain('regular (symbol): draws 3 of the 3 features in source layer "roads".\n');
+        expect(text).toContain('bold (symbol): draws 3 of the 3 features in source layer "roads". Its text is drawn with local fonts, since the glyph server lacks the font stack "Noto Sans Bold".');
+        expect(text).toContain('unset (symbol): draws 3 of the 3 features in source layer "roads". Its text is drawn with local fonts, since the glyph server lacks the font stack "Open Sans Regular,Arial Unicode MS Regular", the default of text-font.');
+    });
+
+    test('notes text drawn with local fonts without a glyphs URL', async () => {
+        const client = await connect('style');
+        const text = textOf(await client.callTool({name: 'debug_layers', arguments: {center: [5, 5], zoom: 3, style: {
+            version: 8,
+            sources: {streets: {type: 'vector', url: `${origin}/tiles.json`}},
+            layers: [{id: 'labels', type: 'symbol', source: 'streets', 'source-layer': 'roads', layout: {'text-field': ['get', 'class']}}],
+        }}}));
+        expect(text).toContain('labels (symbol): draws 3 of the 3 features in source layer "roads". Its text is drawn with local fonts, since the style has no glyphs URL.');
     });
 });
 

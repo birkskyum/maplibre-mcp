@@ -30,10 +30,21 @@ type Verdict = {status: Status; text: string; values?: FilterValues};
 type FilterValues = {label: string; features: Feature[]; fields: string[]};
 
 /** What the checks of a layer evaluate against. */
-type Context = {style: StyleSpecification; zoom: number; globalState: Record<string, unknown>; images?: Set<string>; spriteProblem?: string};
+type Context = {
+    style: StyleSpecification;
+    zoom: number;
+    globalState: Record<string, unknown>;
+    images?: Set<string>;
+    spriteProblem?: string;
+    /** Whether the glyph server has each font stack the layers use, keyed by the stack as glyph URLs write it. */
+    fonts?: Map<string, boolean>;
+};
 
-/** Whether a symbol layer's text or icons are set up, and if so, what keeps them from showing. */
-type SymbolPart = {configured: boolean; problem?: string};
+/**
+ * Whether a symbol layer's text or icons are set up, and if so, what keeps them from showing, or why GL JS draws the
+ * text with local fonts.
+ */
+type SymbolPart = {configured: boolean; problem?: string; fallback?: string};
 
 type Property = readonly ['paint' | 'layout', string];
 
@@ -50,6 +61,7 @@ const COLOR_HIDES = ['fill-color', 'line-color', 'circle-color', 'fill-extrusion
 const TEXT_HIDES: Property[] = [['paint', 'text-opacity'], ['layout', 'text-size']];
 const ICON_HIDES: Property[] = [['paint', 'icon-opacity'], ['layout', 'icon-size']];
 const POLYGON_LAYERS = new Set(['fill', 'fill-extrusion']);
+const DEFAULT_TEXT_FONT = PROPERTY_SPECIFICATIONS.layout_symbol?.['text-font']?.default as string[];
 /** Data-driven properties are evaluated for at most this many features of a layer. */
 const MAX_EVALUATED = 1000;
 
@@ -60,8 +72,9 @@ export function registerDebugLayers(server: McpServer): void {
             'Says for each layer of a style whether it draws anything at a place and zoom, and when it draws nothing, why:',
             'it is hidden or outside its zoom range, the tile lacks its source layer, its filter matches no feature (listed with',
             'the values the tile has), a fill layer gets no polygons, its opacity, width or size is 0 or its color transparent,',
-            'text lacks a glyphs URL, or icons are missing from the sprite. It reads the vector tiles and GeoJSON data at the place.',
-            'Use it when a layer draws nothing. Pass the style as an object, a URL or a file path.',
+            'or icons are missing from the sprite. It also notes text that GL JS draws with local fonts and MapLibre Native leaves',
+            'out, because the style has no glyphs URL or the glyph server lacks its font stack. It reads the vector tiles and',
+            'GeoJSON data at the place. Use it when a layer draws nothing. Pass the style as an object, a URL or a file path.',
         ].join(' '),
         inputSchema: z.object({
             ...STYLE_INPUT,
@@ -80,7 +93,9 @@ async function debugLayers(input: DebugInput): Promise<string> {
     if (!center || zoom === undefined) throw new Error('Pass center and zoom, since the style has no default view.');
     const layers = selectLayers(style, input.layers);
     const sources = await readSources(style, layers.map(([layer]) => layer), center, zoom);
-    const context: Context = {style, zoom, globalState: globalState(style), ...await readSprite(style)};
+    const base: Context = {style, zoom, globalState: globalState(style)};
+    const [sprite, fonts] = await Promise.all([readSprite(style), readFonts(layers, sources, base)]);
+    const context: Context = {...base, ...sprite, fonts};
     const verdicts = layers.map(([layer, index]) => ({layer, verdict: judge(layer, index, sources, context)}));
 
     const lines = [`At [${center.join(', ')}], zoom ${zoom}: ${summary(verdicts.map(({verdict}) => verdict.status))}.`];
@@ -153,6 +168,38 @@ async function readSprite(style: StyleSpecification): Promise<{images?: Set<stri
     }
 }
 
+/** Asks the glyph server whether it has each font stack the text of the layers uses at the place, and keeps the clear answers. */
+async function readFonts(layers: [LayerSpecification, number][], sources: Map<string, SourceData>, context: Context): Promise<Map<string, boolean>> {
+    const {glyphs} = context.style;
+    if (!glyphs) return new Map();
+    const stacks = new Set(layers.flatMap(([layer, index]) => {
+        const features = 'source' in layer ? sources.get(layer.source)?.features?.[sourceLayerOf(layer)] : undefined;
+        return fontStacks(layer, index, features ?? [], context);
+    }));
+    const answers = await Promise.all([...stacks].map(async stack => [stack, await glyphServerHas(glyphs, stack)] as const));
+    return new Map(answers.filter((answer): answer is [string, boolean] => answer[1] !== undefined));
+}
+
+/**
+ * Whether the glyph server has a font stack, asking for its first range as GL JS would. Undefined for any answer but
+ * found or not found, like when the server cannot be reached.
+ */
+async function glyphServerHas(glyphs: string, stack: string): Promise<boolean | undefined> {
+    try {
+        const response = await fetch(glyphs.replace('{fontstack}', stack).replace('{range}', '0-255'));
+        await response.body?.cancel();
+        if (response.ok) return true;
+        return response.status === 404 ? false : undefined;
+    } catch {
+        return undefined;
+    }
+}
+
+/** The source layer a layer draws. A GeoJSON source has a single layer, keyed by the empty string. */
+function sourceLayerOf(layer: LayerSpecification): string {
+    return 'source-layer' in layer && layer['source-layer'] ? layer['source-layer'] : '';
+}
+
 function judge(layer: LayerSpecification, index: number, sources: Map<string, SourceData>, context: Context): Verdict {
     const {zoom} = context;
     if (layer.layout?.visibility === 'none') return {status: 'hidden', text: 'hidden, its visibility is none.'};
@@ -165,7 +212,7 @@ function judge(layer: LayerSpecification, index: number, sources: Map<string, So
     if (data.problem) return nothing(`${data.problem}.`);
     if (!data.features) return checkDrawing(layer, index, [], context, '');
 
-    const sourceLayer = 'source-layer' in layer && layer['source-layer'] ? layer['source-layer'] : '';
+    const sourceLayer = sourceLayerOf(layer);
     const features = data.features[sourceLayer];
     if (!features) return nothing(`the tile has no source layer "${sourceLayer}". It has: ${Object.keys(data.features).join(', ')}.`);
     const of = `${plural(features.length, 'feature')}${sourceLayer ? ` in source layer "${sourceLayer}"` : ''}`;
@@ -203,6 +250,7 @@ function checkDrawing(layer: LayerSpecification, index: number, features: Featur
     if (!shows(text) && !shows(icon)) return nothing(`${[text.problem, icon.problem].filter(isString).join(', and ')}.`);
     const notes = [
         text.problem ? ` Its text doesn't show, since ${text.problem}.` : '',
+        text.fallback ? ` Its text is drawn with local fonts, since ${text.fallback}.` : '',
         icon.problem ? ` Its icons don't show, since ${icon.problem}.` : '',
     ];
     return {status: 'draws', text: `${drawn}.${notes.join('')}`};
@@ -214,12 +262,26 @@ function shows(part: SymbolPart): boolean {
 
 function checkText(layer: LayerSpecification, index: number, features: Feature[], context: Context): SymbolPart {
     if (!layer.layout || !('text-field' in layer.layout)) return {configured: false};
-    if (!context.style.glyphs) return {configured: true, problem: 'the style has no glyphs URL'};
     const zero = zeroProperties(layer, index, features, context, TEXT_HIDES);
     if (zero.length > 0) return {configured: true, problem: `${listOf(zero)} is 0 at zoom ${context.zoom}`};
     const texts = evaluatedStrings(layer, index, 'text-field', features, context);
     if (texts.length > 0 && texts.every(text => text === '')) return {configured: true, problem: 'text-field is empty for every feature'};
-    return {configured: true};
+    if (!context.style.glyphs) return {configured: true, fallback: 'the style has no glyphs URL'};
+    const missing = fontStacks(layer, index, features, context).filter(stack => context.fonts?.get(stack) === false);
+    if (missing.length === 0) return {configured: true};
+    const stacks = `${missing.length === 1 ? 'stack' : 'stacks'} ${listOf(missing.map(stack => `"${stack}"`))}`;
+    return {configured: true, fallback: `the glyph server lacks the font ${stacks}${'text-font' in layer.layout ? '' : ', the default of text-font'}`};
+}
+
+/**
+ * Returns the font stacks a symbol layer's text uses, written the way glyph URLs name them, like
+ * `Noto Sans Regular,Noto Sans Bold`. Stacks with a font the style gives files for in font-faces are left out.
+ */
+function fontStacks(layer: LayerSpecification, index: number, features: Feature[], context: Context): string[] {
+    if (layer.type !== 'symbol' || !layer.layout || !('text-field' in layer.layout)) return [];
+    const stacks = 'text-font' in layer.layout ? evaluate(layer, index, 'layout', 'text-font', features, context) : [DEFAULT_TEXT_FONT];
+    const faces = context.style['font-faces'] ?? {};
+    return [...new Set(stacks.filter(Array.isArray).filter(stack => !stack.some(font => font in faces)).map(stack => stack.join(',')))];
 }
 
 function checkIcon(layer: LayerSpecification, index: number, features: Feature[], context: Context): SymbolPart {

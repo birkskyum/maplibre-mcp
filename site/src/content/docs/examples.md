@@ -120,6 +120,12 @@ buildings (fill): draws nothing, since the tile has no source layer "buildings".
 motorways (line): draws nothing, since its filter matches none of the 568 features in source layer "transportation". No feature has the field "kind".
 ```
 
+It also asks the glyph server for the fonts of each label layer. GL JS draws text in a font the server lacks with local fonts, and MapLibre Native leaves it out:
+
+```text
+places (symbol): draws 16 of the 16 features in source layer "place". Its text is drawn with local fonts, since the glyph server lacks the font stack "Open Sans Bold".
+```
+
 ## Look up the style specification
 
 Mapbox GL JS has properties that MapLibre doesn't, and models mix the two up. `describe_style_spec` answers from the MapLibre Style Specification, so it catches a property from Mapbox's lighting, and suggests the closest names for a typo:

@@ -46,4 +46,9 @@ describe('command line', () => {
         server.close();
         expect(stdout).toContain('places: 1 feature (1 Point)\n  kind: "city" (1)');
     });
+
+    test('looks up a method of GL JS', async () => {
+        const {stdout} = await run(process.execPath, [CLI, 'describe-gl-js-api', 'Map#flyTo']);
+        expect(stdout).toContain('flyTo(options: FlyToOptions, eventData?: any): this');
+    });
 });

@@ -55,6 +55,11 @@ const SECTIONS: Section[] = [
         tools: ['validate_style', 'describe_style_spec', 'describe_sources', 'inspect_tile', 'debug_layers', 'format_style', 'migrate_style'],
     },
     {
+        title: 'Look up the GL JS API',
+        text: '`describe_gl_js_api` is in the `gl-js` toolset, which is on by default. It reads the type definitions of the GL JS version the server renders with, or fetches those of another version from jsDelivr.',
+        tools: ['describe_gl_js_api'],
+    },
+    {
         title: 'Render and compare',
         text: [
             'These tools come with any of the renderer toolsets, `gl-js`, `native` and `martin`.',

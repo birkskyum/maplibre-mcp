@@ -39,7 +39,7 @@ Rendering with MapLibre GL JS uses the installed Google Chrome. Without Chrome, 
 
 ## Command line
 
-Agents that work in a shell, and people, can also run the rendering and data tools as commands, without setting up MCP. A style is a file or a URL.
+Agents that work in a shell, and people, can also run the rendering and data tools, and the GL JS API lookup, as commands, without setting up MCP. A style is a file or a URL.
 
 ```sh
 npx -y maplibre-mcp render style.json --center 12.57,55.68 --zoom 12
@@ -48,6 +48,7 @@ npx -y maplibre-mcp compare-renderers style.json --renderers gl-js,native
 npx -y maplibre-mcp describe-sources style.json
 npx -y maplibre-mcp debug-layers style.json --center 12.57,55.68 --zoom 14
 npx -y maplibre-mcp inspect-tile https://tiles.openfreemap.org/planet --center 12.57,55.68 --zoom 14
+npx -y maplibre-mcp describe-gl-js-api Map#flyTo
 ```
 
 The images go to `map.png`, `compare.png` and `renderers.png`, or to `--out`. `npx -y maplibre-mcp --help` lists the options, and [Command line](https://birkskyum.github.io/maplibre-mcp/command-line/) has the details. To validate, format or migrate a style, use `gl-style-validate`, `gl-style-format` and `gl-style-migrate` from `@maplibre/maplibre-gl-style-spec`.
@@ -56,6 +57,7 @@ The images go to `map.png`, `compare.png` and `renderers.png`, or to `--out`. `n
 
 - `validate_style` checks a style against the MapLibre Style Specification, and lists each problem with the path to its property.
 - `describe_style_spec` looks up a layer type, property, source type or expression, with its documentation and the GL JS and Native versions that support it. For a misspelled name, it suggests the closest real ones.
+- `describe_gl_js_api` looks up a class, method, option or event of MapLibre GL JS, with its signature, documentation, default and examples, in the type definitions of the version the server renders with, or of another version. It also says when a method is not in MapLibre, like one from Mapbox GL JS.
 - `describe_sources` reads the TileJSON, PMTiles header or GeoJSON of each source in a style, lists the source layers and fields, and finds layers that use a source layer or field that is not there.
 - `inspect_tile` reads the vector tile at a place and lists each source layer with its geometry types, the values of its fields and how often they occur, and a few example features. The source can be a source in a style, a TileJSON URL like a Martin source, a PMTiles archive or a tile URL, with MVT or MLT tiles.
 - `debug_layers` says for each layer of a style whether it draws at a place and zoom, and if not, why, like a missing source layer, a filter that matches nothing (next to the values the data has), a fill layer without polygons, paint that comes out as 0 or transparent, or icons missing from the sprite. It also notes text that falls back to local fonts, since the glyph server lacks its font stack.
@@ -79,7 +81,7 @@ npx -y maplibre-mcp --toolsets style,gl-js,martin
 | Toolset | What it adds |
 | --- | --- |
 | `style` | `validate_style`, `describe_style_spec`, `describe_sources`, `inspect_tile`, `debug_layers`, `format_style`, `migrate_style` |
-| `gl-js` | Rendering with MapLibre GL JS, and `show_map` |
+| `gl-js` | Rendering with MapLibre GL JS, `describe_gl_js_api` and `show_map` |
 | `native` | Rendering with MapLibre Native |
 | `martin` | Rendering with a Martin server, and `martin_list_sources` |
 

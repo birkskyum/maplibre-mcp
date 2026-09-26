@@ -152,6 +152,26 @@ Support:
   negative values: GL JS not yet (https://github.com/maplibre/maplibre-gl-js/issues/8051), Android not yet (https://github.com/maplibre/maplibre-native/issues/4455), iOS not yet (https://github.com/maplibre/maplibre-native/issues/4455)
 ```
 
+## Look up the GL JS API
+
+Models write GL JS code from memory, which mixes in Mapbox GL JS methods and older versions. `describe_gl_js_api` answers from the type definitions of the GL JS version the server renders with, so it says when a method isn't there:
+
+```text
+Map has no member "setFog" in MapLibre GL JS 6.11.2.
+```
+
+For a name it knows, it returns the signature, documentation, default and examples, with a link to the docs page:
+
+```text
+MapOptions.maxPitch (property of MapOptions, MapLibre GL JS 6.11.2)
+maxPitch?: number | null
+The maximum pitch of the map (0-180).
+Default: 60
+Docs: https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/MapOptions/#maxpitch
+```
+
+For a class or an options type, it lists the members. With `version`, it answers for another GL JS version instead, like the `"5"` a project uses.
+
 ## Compare GL JS and MapLibre Native
 
 With the `gl-js` and `native` toolsets on, `compare_renderers` draws one style with both, to check that it looks the same on the web and in the mobile SDKs:

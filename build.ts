@@ -2,13 +2,15 @@ import {build, type Plugin} from 'esbuild';
 import {fileURLToPath} from 'node:url';
 
 /**
- * `@maplibre/mlt` ships ES modules whose imports have no file extensions, which Node cannot load, so it is bundled.
- * The package it imports, `@mapbox/point-geometry`, stays external and is a dependency of this package for that reason.
+ * Bundles packages that would not work, or would cost too much, as dependencies. `@maplibre/mlt` ships ES modules
+ * whose imports have no file extensions, which Node cannot load. The package it imports, `@mapbox/point-geometry`,
+ * stays external and is a dependency of this package for that reason. `@babel/parser` depends on `@babel/types` only
+ * for its type definitions, which would add 3 MB to every install.
  */
-const bundleMlt: Plugin = {
-    name: 'bundle-mlt',
+const bundlePackages: Plugin = {
+    name: 'bundle-packages',
     setup(context) {
-        context.onResolve({filter: /^@maplibre\/mlt$/}, () => ({path: fileURLToPath(import.meta.resolve('@maplibre/mlt'))}));
+        context.onResolve({filter: /^(@maplibre\/mlt|@babel\/parser)$/}, ({path}) => ({path: fileURLToPath(import.meta.resolve(path))}));
     },
 };
 
@@ -18,7 +20,7 @@ await build({
     platform: 'node',
     format: 'esm',
     packages: 'external',
-    plugins: [bundleMlt],
+    plugins: [bundlePackages],
     banner: {js: '#!/usr/bin/env node'},
     outfile: 'dist/index.js',
 });

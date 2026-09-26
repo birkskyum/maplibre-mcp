@@ -56,7 +56,7 @@ function usage(): string {
     const commands = Object.values(COMMANDS).map(command => `  ${command.usage.padEnd(28)}${command.description}`);
     return [
         'Usage: maplibre-mcp [--toolsets <names>] [--http [--host <address>] [--port <port>]]',
-        '       maplibre-mcp <command> <style>... [options]',
+        '       maplibre-mcp <command> <argument>... [options]',
         '',
         'Runs an MCP server for MapLibre, on stdio or, with --http, over Streamable HTTP at /mcp',
         '(default address 127.0.0.1, port 3100).',
@@ -84,6 +84,9 @@ function usage(): string {
         '  --center <lng,lat> --zoom <zoom>, the place to read, by default the source\'s center at its highest zoom',
         '  --source <id>, to read a source of the style given instead',
         '  --layer <name> --examples <count>',
+        '',
+        'Options of describe-gl-js-api:',
+        '  --version <version>, a GL JS version or range like 5, by default the one maplibre-mcp renders with',
         '',
         'To validate, format or migrate a style, use gl-style-validate, gl-style-format and gl-style-migrate',
         'from @maplibre/maplibre-gl-style-spec.',

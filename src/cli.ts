@@ -17,6 +17,8 @@ type Command = {
     image?: string;
     /** Whether the command takes a vector source, or a style when `--source` names one of its sources. */
     readsSource?: boolean;
+    /** Whether the command takes a name to look up, rather than a style. */
+    takesName?: boolean;
 };
 
 /** Only the tools that nothing else offers on the command line; the style spec has `gl-style-validate` and friends. */
@@ -45,6 +47,10 @@ export const COMMANDS: Record<string, Command> = {
         tool: 'inspect_tile', usage: 'inspect-tile <source>', readsSource: true,
         description: 'List the source layers, geometry types and field values of the vector tile at a place',
     },
+    'describe-gl-js-api': {
+        tool: 'describe_gl_js_api', usage: 'describe-gl-js-api <name>', takesName: true,
+        description: 'Look up a class, method, option or event of MapLibre GL JS',
+    },
 };
 
 const OPTIONS = {
@@ -62,12 +68,14 @@ const OPTIONS = {
     layer: {type: 'string'},
     layers: {type: 'string'},
     examples: {type: 'string'},
+    version: {type: 'string'},
 } as const;
 
 type Options = {[Name in keyof typeof OPTIONS]?: string};
 
 const STYLE_HELP = 'A style is a file or a URL.';
 const SOURCE_HELP = 'A source is a TileJSON URL, a PMTiles archive or a tile URL, or a style with --source <id>.';
+const NAME_HELP = 'A name is a class, method, option or event, like Map#flyTo.';
 
 const NUMBER_OPTIONS = ['zoom', 'bearing', 'pitch', 'width', 'height', 'examples'] as const;
 const LIST_OPTIONS = ['center', 'bounds'] as const;
@@ -81,14 +89,19 @@ export async function runCommand(name: string, args: string[]): Promise<number> 
     const command = COMMANDS[name];
     const {values, positionals} = parseArgs({args, options: OPTIONS, allowPositionals: true});
     const styles = command.twoStyles ? 2 : 1;
-    if (positionals.length !== styles) throw new Error(`Usage: maplibre-mcp ${command.usage}. ${command.readsSource ? SOURCE_HELP : STYLE_HELP}`);
+    if (positionals.length !== styles) throw new Error(`Usage: maplibre-mcp ${command.usage}. ${argumentHelp(command)}`);
 
-    const target = command.readsSource ? sourceArguments(positionals[0], values.source) : styleArguments(positionals);
+    const target = command.takesName ? {name: positionals[0]} : command.readsSource ? sourceArguments(positionals[0], values.source) : styleArguments(positionals);
     const client = await connectInProcess();
     const result = await client.callTool({name: command.tool, arguments: {...target, ...toolArguments(values)}});
     const lines = await outputLines(result, values.out ?? command.image);
     for (const line of lines) (result.isError ? console.error : console.log)(line);
     return result.isError ? 1 : 0;
+}
+
+function argumentHelp(command: Command): string {
+    if (command.takesName) return NAME_HELP;
+    return command.readsSource ? SOURCE_HELP : STYLE_HELP;
 }
 
 async function connectInProcess(): Promise<Client> {
@@ -128,6 +141,7 @@ function toolArguments(options: Options): Record<string, unknown> {
     if (options.layers) args.layers = options.layers.split(',');
     if (options.renderer) args.renderer = options.renderer;
     if (options.renderers) args.renderers = options.renderers.split(',');
+    if (options.version) args.version = options.version;
     return args;
 }
 

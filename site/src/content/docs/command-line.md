@@ -1,9 +1,9 @@
 ---
 title: Command line
-description: Render and compare MapLibre styles, and inspect vector tiles, from a shell, without setting up MCP.
+description: Render and compare MapLibre styles, inspect vector tiles and look up the GL JS API from a shell, without setting up MCP.
 ---
 
-Agents that work in a shell, and people, can also run the rendering and data tools as commands. Each command runs one tool and exits, so nothing has to be set up in an AI client first.
+Agents that work in a shell, and people, can also run the rendering and data tools, and the GL JS API lookup, as commands. Each command runs one tool and exits, so nothing has to be set up in an AI client first.
 
 ```sh
 npx -y maplibre-mcp render style.json --center 12.57,55.68 --zoom 12
@@ -21,6 +21,7 @@ A style is a file or a URL. The commands that render write the image to a file, 
 | `describe-sources <style>` | Lists the source layers and fields of each source, and the layers that use ones that are not there |
 | `debug-layers <style>` | Says which layers draw at a place, and why the others draw nothing |
 | `inspect-tile <source>` | Lists the source layers, geometry types and field values of the vector tile at a place |
+| `describe-gl-js-api <name>` | Looks up a class, method, option or event of MapLibre GL JS |
 
 ## Options
 
@@ -59,6 +60,15 @@ npx -y maplibre-mcp inspect-tile style.json --source openmaptiles --center 12.57
 | `--source <id>` | `--source openmaptiles` reads that source of the style |
 | `--layer <name>` | `--layer transportation` lists only that source layer |
 | `--examples <count>` | `--examples 0` leaves out the example features, of which it shows 3 |
+
+## Look up the GL JS API
+
+`describe-gl-js-api` looks up a class, method, option or event, like `Map#flyTo` or `MapOptions.maxPitch`, in the GL JS version maplibre-mcp renders with. `--version` looks it up in another version instead, fetched from jsDelivr.
+
+```sh
+npx -y maplibre-mcp describe-gl-js-api Map#flyTo
+npx -y maplibre-mcp describe-gl-js-api maxPitch --version 5
+```
 
 ## Validate, format and migrate
 

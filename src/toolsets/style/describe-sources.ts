@@ -4,7 +4,7 @@ import {PMTiles} from 'pmtiles';
 import {z} from 'zod';
 import {fetchJson, loadStyle, STYLE_INPUT} from '../../style-input.js';
 
-type VectorLayer = {id: string; fields?: Record<string, string>};
+export type VectorLayer = {id: string; fields?: Record<string, string>};
 
 export type TileJson = {
     tiles?: string[];
@@ -99,10 +99,13 @@ function describeTileJson(url: string, tileJson: TileJson): SourceInfo {
 async function describePmtiles(url: string): Promise<SourceInfo> {
     const archive = new PMTiles(url);
     const [header, metadata] = await Promise.all([archive.getHeader(), archive.getMetadata()]);
-    const lines = [`PMTiles: ${url}`, `Zoom ${header.minZoom} to ${header.maxZoom}.`];
-    const vectorLayers = typeof metadata === 'object' && metadata !== null && 'vector_layers' in metadata ?
-        metadata.vector_layers : undefined;
-    return withVectorLayers(lines, Array.isArray(vectorLayers) ? vectorLayers : undefined);
+    return withVectorLayers([`PMTiles: ${url}`, `Zoom ${header.minZoom} to ${header.maxZoom}.`], pmtilesVectorLayers(metadata));
+}
+
+/** Returns the `vector_layers` of the metadata of a PMTiles archive, which is JSON like a TileJSON. */
+export function pmtilesVectorLayers(metadata: unknown): VectorLayer[] | undefined {
+    const vectorLayers = typeof metadata === 'object' && metadata !== null && 'vector_layers' in metadata ? metadata.vector_layers : undefined;
+    return Array.isArray(vectorLayers) ? vectorLayers : undefined;
 }
 
 function withVectorLayers(lines: string[], vectorLayers: VectorLayer[] | undefined): SourceInfo {

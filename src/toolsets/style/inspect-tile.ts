@@ -18,7 +18,8 @@ export function registerInspectTile(server: McpServer): void {
         title: 'Inspect tile',
         description: [
             'Reads the vector tile of a source at a place and zoom, and lists each source layer with its number of features,',
-            'their geometry types, the values of each field and a few example features. Use it to learn the values data',
+            'their geometry types, the values of each field and a few example features. It also gives the zoom range of the',
+            'source and the source layers its metadata lists that the tile lacks. Use it to learn the values data',
             'really has, like the classes of roads, before writing filters and expressions. The source is either the id of',
             'a source in the style you pass, or the URL of a vector source: a TileJSON URL like a Martin source, a PMTiles',
             'archive, or a tile URL with {z}, {x} and {y}. Reads MVT and MLT tiles.',
@@ -82,16 +83,25 @@ async function inspect(source: TileSource, style: StyleSpecification | undefined
 
     const format = encoding && bytes ? `, ${encoding.toUpperCase()}, ${(bytes.length / 1024).toFixed(1)} kB` : '';
     const lines = [`Tile ${z}/${x}/${y} of ${source.name}, at [${center.join(', ')}]${format}.`];
+    if (source.layers) lines.push(`The source has tiles ${source.minzoom === source.maxzoom ? `at zoom ${source.minzoom}` : `from zoom ${source.minzoom} to ${source.maxzoom}`}.`);
     if (zoom > source.maxzoom) lines.push(`The source has no tiles above zoom ${source.maxzoom}, so maps show this tile at zoom ${zoom} too.`);
     if (zoom < source.minzoom) lines.push(`The source has no tiles below zoom ${source.minzoom}, so maps show none of its data at zoom ${zoom}.`);
     if (!layers) return [...lines, 'The tile is empty.'].join('\n');
 
+    if (input.layer !== undefined && !layers[input.layer]) return [...lines, missingLayer(input.layer, layers, source)].join('\n');
     const names = input.layer === undefined ? Object.keys(layers) : [input.layer];
-    if (input.layer !== undefined && !layers[input.layer]) {
-        return [...lines, `The tile has no source layer "${input.layer}". It has: ${Object.keys(layers).join(', ')}.`].join('\n');
-    }
     for (const name of names) lines.push('', ...describeLayer(name, layers[name], input.examples ?? DEFAULT_EXAMPLES));
+    const absent = input.layer === undefined ? (source.layers ?? []).filter(name => !layers[name]) : [];
+    if (absent.length > 0) lines.push('', `The source also has ${plural(absent.length, 'source layer')} with no features in this tile: ${absent.join(', ')}.`);
     return lines.join('\n');
+}
+
+/** Says whether a source layer the tile lacks is one the source has elsewhere, going by its metadata. */
+function missingLayer(name: string, layers: Record<string, Feature[]>, source: TileSource): string {
+    const inTile = Object.keys(layers).join(', ');
+    if (source.layers?.includes(name)) return `The source has the source layer "${name}", but this tile has no features in it. The tile has: ${inTile}.`;
+    if (source.layers && source.layers.length > 0) return `The source has no source layer "${name}". It has: ${source.layers.join(', ')}.`;
+    return `The tile has no source layer "${name}". It has: ${inTile}.`;
 }
 
 function describeLayer(name: string, features: Feature[], examples: number): string[] {

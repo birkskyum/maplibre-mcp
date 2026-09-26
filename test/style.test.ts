@@ -134,6 +134,7 @@ describe('inspect_tile', () => {
         ]}]);
         ({server, origin} = await serveJson({
             '/roads.json': {tiles: ['/roads/{z}/{x}/{y}.pbf'], maxzoom: 0},
+            '/streets.json': {tiles: ['/roads/{z}/{x}/{y}.pbf'], maxzoom: 0, vector_layers: [{id: 'roads'}, {id: 'buildings'}]},
             '/roads/0/0/0.pbf': fromGeojsonVt({roads}),
             '/places/0/0/0.mlt': places,
         }));
@@ -148,6 +149,17 @@ describe('inspect_tile', () => {
         const text = textOf(await client.callTool({name: 'inspect_tile', arguments: {source: `${origin}/roads.json`, center: [5, 5], zoom: 3}}));
         expect(text).toContain('The source has no tiles above zoom 0, so maps show this tile at zoom 3 too.');
         expect(text).toContain('roads: 3 features (3 LineString)\n  class: "primary" (2), "minor" (1)\n  oneway (in 1 of 3): 1 (1)');
+    });
+
+    test('says which source layers of the TileJSON the tile lacks', async () => {
+        const client = await connect('style');
+        const text = textOf(await client.callTool({name: 'inspect_tile', arguments: {source: `${origin}/streets.json`, center: [5, 5], zoom: 0}}));
+        expect(text).toContain('The source has tiles at zoom 0.');
+        expect(text).toContain('The source also has 1 source layer with no features in this tile: buildings.');
+        const buildings = textOf(await client.callTool({name: 'inspect_tile', arguments: {source: `${origin}/streets.json`, center: [5, 5], zoom: 0, layer: 'buildings'}}));
+        expect(buildings).toContain('The source has the source layer "buildings", but this tile has no features in it. The tile has: roads.');
+        const parks = textOf(await client.callTool({name: 'inspect_tile', arguments: {source: `${origin}/streets.json`, center: [5, 5], zoom: 0, layer: 'parks'}}));
+        expect(parks).toContain('The source has no source layer "parks". It has: roads, buildings.');
     });
 
     test('reads the MLT tiles of a style source', async () => {

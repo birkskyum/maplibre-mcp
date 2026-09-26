@@ -7,7 +7,7 @@ import {PbfReader} from 'pbf';
 import {PMTiles, type Source, TileType} from 'pmtiles';
 import {mercatorX, mercatorY} from './render-style.js';
 import {checkFileAccess, fetchJson} from './style-input.js';
-import type {TileJson} from './toolsets/style/describe-sources.js';
+import {pmtilesVectorLayers, type TileJson} from './toolsets/style/describe-sources.js';
 
 export type Encoding = 'mvt' | 'mlt';
 
@@ -21,6 +21,8 @@ export type TileSource = {
     center?: number[];
     tms: boolean;
     encoding?: Encoding;
+    /** The source layers its TileJSON or PMTiles metadata lists. Undefined for a source without metadata, like a tile URL. */
+    layers?: string[];
     getTile: (z: number, x: number, y: number) => Promise<Uint8Array | undefined>;
 };
 
@@ -88,6 +90,7 @@ async function openTileJson(url: string): Promise<TileSource> {
         maxzoom: tileJson.maxzoom ?? 22,
         center: tileJson.center,
         tms: tileJson.scheme === 'tms',
+        layers: tileJson.vector_layers?.map(layer => layer.id) ?? [],
         getTile: (z, x, y) => fetchTile(template, z, x, y, url),
     };
 }
@@ -101,6 +104,7 @@ async function openPmtiles(location: string): Promise<TileSource> {
     const archive = new PMTiles(/^https?:\/\//.test(location) ? location : fileSource(location));
     const header = await archive.getHeader();
     if (RASTER_TILE_TYPES.has(header.tileType)) throw new Error(`${location} holds ${TileType[header.tileType]} images, not vector tiles.`);
+    const metadata = await archive.getMetadata();
     return {
         name: location,
         minzoom: header.minZoom,
@@ -108,6 +112,7 @@ async function openPmtiles(location: string): Promise<TileSource> {
         center: [header.centerLon, header.centerLat, header.centerZoom],
         tms: false,
         encoding: header.tileType === TileType.Mlt ? 'mlt' : undefined,
+        layers: pmtilesVectorLayers(metadata)?.map(layer => layer.id) ?? [],
         getTile: async (z, x, y) => {
             const tile = await archive.getZxy(z, x, y);
             return tile && new Uint8Array(tile.data);

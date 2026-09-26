@@ -37,7 +37,7 @@ function registerListSources(server: McpServer): void {
         }),
         annotations: {readOnlyHint: true, openWorldHint: true},
     }, async ({url}) => {
-        const base = (url ?? process.env.MARTIN_URL ?? DEFAULT_URL).replace(/\/+$/, '');
+        const base = (url ?? (process.env.MARTIN_URL || DEFAULT_URL)).replace(/\/+$/, '');
         const catalog = await fetchJson<Catalog>(`${base}/catalog`);
         return {content: [{type: 'text', text: describeCatalog(base, catalog)}]};
     });

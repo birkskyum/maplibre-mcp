@@ -19,8 +19,20 @@ jobs:
           cache: npm
           registry-url: https://registry.npmjs.org
       - run: test "v$(node -p "require('./package.json').version")" = "$GITHUB_REF_NAME"
+      - run: test "$(jq -r '.version, .packages[0].version' server.json | sort -u)" = "${GITHUB_REF_NAME#v}"
       - run: sudo apt-get update && sudo apt-get install -y xvfb libopengl0 libglx0 libjpeg-turbo8 libuv1t64 libx11-6 libxext6 libwebp7 libicu74 libpng16-16t64
       - run: npm ci
       - run: npx playwright-core install --with-deps chromium
       - run: npm install -g npm@12
       - run: xvfb-run -a npm publish
+
+  registry:
+    needs: publish
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - run: curl -L https://github.com/modelcontextprotocol/registry/releases/download/v1.8.1/mcp-publisher_linux_amd64.tar.gz | tar xz mcp-publisher
+      - run: until npm view "maplibre-mcp@${GITHUB_REF_NAME#v}" mcpName --prefer-online | grep -q .; do sleep 15; done
+        timeout-minutes: 10
+      - run: ./mcp-publisher login github-oidc
+      - run: ./mcp-publisher publish

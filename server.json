@@ -1,0 +1,36 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.birkskyum/maplibre-mcp",
+  "title": "maplibre-mcp",
+  "description": "An MCP server that lets AI agents check, render and show MapLibre styles",
+  "repository": {
+    "url": "https://github.com/birkskyum/maplibre-mcp",
+    "source": "github"
+  },
+  "websiteUrl": "https://birkskyum.github.io/maplibre-mcp/",
+  "version": "0.5.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "maplibre-mcp",
+      "version": "0.5.0",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "MAPLIBRE_MCP_TOOLSETS",
+          "description": "The toolsets to turn on, comma separated, like style,gl-js,martin. Defaults to style,gl-js, and all turns on every toolset.",
+          "isRequired": false,
+          "format": "string"
+        },
+        {
+          "name": "MARTIN_URL",
+          "description": "The Martin server that the martin toolset reads and renders with. Defaults to http://localhost:3000.",
+          "isRequired": false,
+          "format": "string"
+        }
+      ]
+    }
+  ]
+}

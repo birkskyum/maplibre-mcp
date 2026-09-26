@@ -23,4 +23,4 @@ jobs:
       - run: npm ci
       - run: npx playwright-core install --with-deps chromium
       - run: npm install -g npm@12
-      - run: xvfb-run -a npm stage publish
+      - run: xvfb-run -a npm publish

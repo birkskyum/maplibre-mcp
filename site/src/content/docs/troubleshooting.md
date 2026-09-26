@@ -15,7 +15,7 @@ Check that the client lists the server and its tools, with `claude mcp list` in 
 Rendering with MapLibre GL JS needs Google Chrome or the Chromium that Playwright installs. Install Chrome, or run: npx playwright-core@<version> install chromium
 ```
 
-Install Google Chrome, or run the command in the message. It names the Playwright version the server uses, which has to match the Chromium it downloads.
+Install Google Chrome, or run the command in the message. It names the Playwright version the server uses, which has to match the Chromium it downloads. On Debian or Ubuntu without a desktop, like in a Docker container, run it as root with `--with-deps` after `install`, which also installs the system libraries Chromium needs.
 
 ```text
 The map did not finish loading within 30 seconds, so the image may be incomplete.

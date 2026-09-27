@@ -1,5 +1,7 @@
 # maplibre-mcp
 
+[![birkskyum/maplibre-mcp MCP server](https://glama.ai/mcp/servers/birkskyum/maplibre-mcp/badges/score.svg)](https://glama.ai/mcp/servers/birkskyum/maplibre-mcp)
+
 An MCP server that lets AI agents check, render and show [MapLibre](https://maplibre.org) styles.
 
 ![A MapLibre style before and after an agent turned its motorways red, and the pixels that changed](https://raw.githubusercontent.com/birkskyum/maplibre-mcp/main/site/public/images/compare-z10.webp)

@@ -82,7 +82,7 @@ const SECTIONS: Section[] = [
         title: 'Search the ecosystem',
         text: [
             '`search_ecosystem` and `find_basemaps` are in the `ecosystem` toolset, which is on by default.',
-            'They read the catalog of [Build with MapLibre](https://buildwithmaplibre.com) at https://buildwithmaplibre.com/catalog.json,',
+            'They read the catalog of [Make with MapLibre](https://makewithmaplibre.com) at https://makewithmaplibre.com/catalog.json,',
             'fetched at most once a day, or the copy that `MAPLIBRE_MCP_CATALOG_URL` points to.',
         ].join(' '),
         tools: ['search_ecosystem', 'find_basemaps'],

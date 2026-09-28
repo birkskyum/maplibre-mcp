@@ -4,39 +4,39 @@ import {connect, serveJson, textOf} from './connect.js';
 
 const catalog = {
     schemaVersion: 1,
-    site: 'https://buildwithmaplibre.com/',
+    site: 'https://makewithmaplibre.com/',
     generatedAt: '2026-09-28T12:00:00.000Z',
     libraries: [
         {
             slug: 'react-map-gl', name: 'React Map GL', kind: 'sdk', tagline: 'React wrapper for MapLibre GL JS',
             description: 'A declarative React API for MapLibre GL JS.', link: 'https://visgl.github.io/react-map-gl/',
-            url: 'https://buildwithmaplibre.com/sdks/react-map-gl', repository: 'https://github.com/visgl/react-map-gl',
+            url: 'https://makewithmaplibre.com/sdks/react-map-gl', repository: 'https://github.com/visgl/react-map-gl',
             license: 'MIT', platforms: ['Web'], languages: ['JS / TS'], frameworks: ['React'], renderers: ['MapLibre GL JS'], weight: 5,
         },
         {
             slug: 'maplibre-swiftui-dsl', name: 'MapLibre SwiftUI DSL', kind: 'sdk', tagline: 'SwiftUI bindings for MapLibre Native',
             description: 'Declarative SwiftUI maps.', link: 'https://github.com/maplibre/swiftui-dsl',
-            url: 'https://buildwithmaplibre.com/sdks/maplibre-swiftui-dsl', platforms: ['iOS'], languages: ['Swift'],
+            url: 'https://makewithmaplibre.com/sdks/maplibre-swiftui-dsl', platforms: ['iOS'], languages: ['Swift'],
             frameworks: ['SwiftUI'], renderers: ['MapLibre Native'], weight: 3,
         },
         {
             slug: 'valhalla', name: 'Valhalla', kind: 'navigation', tagline: 'Open-source routing engine',
             description: 'A routing engine for OpenStreetMap data.', link: 'https://github.com/valhalla/valhalla',
-            url: 'https://buildwithmaplibre.com/navigation/valhalla', platforms: ['Server'], languages: ['C++'], frameworks: [], renderers: [],
+            url: 'https://makewithmaplibre.com/navigation/valhalla', platforms: ['Server'], languages: ['C++'], frameworks: [], renderers: [],
         },
     ],
     basemaps: [
         {
             slug: 'openfreemap-liberty', name: 'Liberty', provider: 'OpenFreeMap', description: 'A detailed OpenStreetMap basemap.',
-            styleUrl: 'https://tiles.openfreemap.org/styles/liberty', free: true, url: 'https://buildwithmaplibre.com/basemaps/styles/openfreemap-liberty',
+            styleUrl: 'https://tiles.openfreemap.org/styles/liberty', free: true, url: 'https://makewithmaplibre.com/basemaps/styles/openfreemap-liberty',
         },
         {
             slug: 'maptiler-dataviz-dark', name: 'Dataviz Dark', provider: 'MapTiler', description: 'A dark style for data visualization.',
-            styleUrl: 'https://api.maptiler.com/maps/dataviz-dark/style.json', free: false, url: 'https://buildwithmaplibre.com/basemaps/styles/maptiler-dataviz-dark',
+            styleUrl: 'https://api.maptiler.com/maps/dataviz-dark/style.json', free: false, url: 'https://makewithmaplibre.com/basemaps/styles/maptiler-dataviz-dark',
         },
         {
             slug: 'aws-terrarium', name: 'Terrarium Elevation', provider: 'AWS Open Data', description: 'Global elevation tiles.',
-            tileUrl: 'https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png', free: true, url: 'https://buildwithmaplibre.com/basemaps/styles/aws-terrarium',
+            tileUrl: 'https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png', free: true, url: 'https://makewithmaplibre.com/basemaps/styles/aws-terrarium',
         },
     ],
     services: [
@@ -45,13 +45,13 @@ const catalog = {
     products: [
         {
             slug: 'immich', name: 'Immich', tagline: 'Self-hosted photo and video backup', description: 'Shows geotagged photos on a map.',
-            link: 'https://immich.app', url: 'https://buildwithmaplibre.com/products/immich', categories: ['Social & Messaging'],
+            link: 'https://immich.app', url: 'https://makewithmaplibre.com/products/immich', categories: ['Social & Messaging'],
             renderers: ['MapLibre GL JS'], platforms: ['Web', 'Android', 'iOS'], frameworks: [],
             uses: {sdks: ['react-map-gl'], plugins: [], routing: ['valhalla'], geocoding: [], tileInfrastructure: []}, added: '2026-03-29', weight: 4,
         },
     ],
     makers: [
-        {slug: 'geoagency', name: 'Geo Agency', link: 'https://geo.example', description: 'Builds MapLibre apps for clients.', consultancy: true, url: 'https://buildwithmaplibre.com/makers/geoagency'},
+        {slug: 'geoagency', name: 'Geo Agency', link: 'https://geo.example', description: 'Builds MapLibre apps for clients.', consultancy: true, url: 'https://makewithmaplibre.com/makers/geoagency'},
     ],
 };
 
@@ -75,8 +75,8 @@ describe('ecosystem', () => {
         expect(text).toContain('React Map GL (sdk): React wrapper for MapLibre GL JS');
         expect(text).toContain('  Web · React · JS / TS · MapLibre GL JS · MIT');
         expect(text).toContain('  https://visgl.github.io/react-map-gl/, repository https://github.com/visgl/react-map-gl');
-        expect(text).toContain('  More: https://buildwithmaplibre.com/sdks/react-map-gl');
-        expect(text).toContain('From https://buildwithmaplibre.com/catalog.json, generated 2026-09-28.');
+        expect(text).toContain('  More: https://makewithmaplibre.com/sdks/react-map-gl');
+        expect(text).toContain('From https://makewithmaplibre.com/catalog.json, generated 2026-09-28.');
     });
 
     test('filters by platform', async () => {
@@ -92,7 +92,7 @@ describe('ecosystem', () => {
         const text = textOf(await client.callTool({name: 'search_ecosystem', arguments: {kind: 'navigation'}}));
         expect(text).toContain('Valhalla (navigation): Open-source routing engine');
         expect(text).toContain('Stadia Maps (hosted routing API): Hosted Valhalla routing.');
-        expect(text).toContain('  https://docs.stadiamaps.com/routing/ (a sponsored listing on Build with MapLibre)');
+        expect(text).toContain('  https://docs.stadiamaps.com/routing/ (a sponsored listing on Make with MapLibre)');
     });
 
     test('says which libraries a product is built with', async () => {
@@ -112,7 +112,7 @@ describe('ecosystem', () => {
     test('says when nothing matches', async () => {
         const client = await connect('ecosystem');
         const text = textOf(await client.callTool({name: 'search_ecosystem', arguments: {query: 'cobol'}}));
-        expect(text).toContain('Nothing in Build with MapLibre matches "cobol". Try fewer or broader words, or another kind.');
+        expect(text).toContain('Nothing in Make with MapLibre matches "cobol". Try fewer or broader words, or another kind.');
     });
 
     test('lists free basemaps with their style URLs first', async () => {
@@ -152,7 +152,7 @@ describe('ecosystem', () => {
             const client = await connect('ecosystem');
             const result = await client.callTool({name: 'search_ecosystem', arguments: {query: 'react'}});
             expect(result.isError).toBe(true);
-            expect(textOf(result)).toContain(`Could not load the Build with MapLibre catalog from ${origin}/missing.json: Fetching ${origin}/missing.json failed with HTTP 404. The ecosystem tools need to reach it over the network.`);
+            expect(textOf(result)).toContain(`Could not load the Make with MapLibre catalog from ${origin}/missing.json: Fetching ${origin}/missing.json failed with HTTP 404. The ecosystem tools need to reach it over the network.`);
         } finally {
             process.env.MAPLIBRE_MCP_CATALOG_URL = `${origin}/catalog.json`;
         }

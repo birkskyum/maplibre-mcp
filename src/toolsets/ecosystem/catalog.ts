@@ -1,6 +1,6 @@
 import {fetchJson} from '../../style-input.js';
 
-/** The catalog of Build with MapLibre, as served at https://buildwithmaplibre.com/catalog.json. */
+/** The catalog of Make with MapLibre, as served at https://makewithmaplibre.com/catalog.json. */
 export type Catalog = {
     schemaVersion: number;
     site: string;
@@ -85,7 +85,7 @@ export type Maker = {
 
 /** The catalog schema version this server reads. The site bumps it when it renames or removes a field. */
 const SCHEMA_VERSION = 1;
-const DEFAULT_URL = 'https://buildwithmaplibre.com/catalog.json';
+const DEFAULT_URL = 'https://makewithmaplibre.com/catalog.json';
 const MAX_AGE = 24 * 60 * 60 * 1000;
 
 const cache = new Map<string, {catalog: Promise<Catalog>; fetched: number}>();
@@ -107,7 +107,7 @@ async function fetchCatalog(url: string): Promise<Catalog> {
         catalog = await fetchJson<Catalog>(url);
     } catch (error) {
         const reason = (error instanceof Error ? error.message : String(error)).replace(/\.?$/, '.');
-        throw new Error(`Could not load the Build with MapLibre catalog from ${url}: ${reason} The ecosystem tools need to reach it over the network.`);
+        throw new Error(`Could not load the Make with MapLibre catalog from ${url}: ${reason} The ecosystem tools need to reach it over the network.`);
     }
     if (catalog.schemaVersion !== SCHEMA_VERSION) {
         throw new Error(`The catalog at ${url} has schema version ${catalog.schemaVersion}, and this maplibre-mcp reads version ${SCHEMA_VERSION}. Update maplibre-mcp.`);

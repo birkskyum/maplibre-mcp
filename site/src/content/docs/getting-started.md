@@ -77,7 +77,7 @@ Most other clients read this JSON. Claude Desktop keeps it in `claude_desktop_co
 
 ## Choose toolsets
 
-The tools come in toolsets, one for each MapLibre project, plus `ecosystem`, which searches [Build with MapLibre](https://buildwithmaplibre.com). `style`, `gl-js` and `ecosystem` are on by default. Choose others with `--toolsets`, or with the `MAPLIBRE_MCP_TOOLSETS` environment variable, and `all` turns on every toolset:
+The tools come in toolsets, one for each MapLibre project, plus `ecosystem`, which searches [Make with MapLibre](https://makewithmaplibre.com). `style`, `gl-js` and `ecosystem` are on by default. Choose others with `--toolsets`, or with the `MAPLIBRE_MCP_TOOLSETS` environment variable, and `all` turns on every toolset:
 
 ```sh
 claude mcp add maplibre -- npx -y maplibre-mcp --toolsets style,gl-js,martin
@@ -89,7 +89,7 @@ claude mcp add maplibre -- npx -y maplibre-mcp --toolsets style,gl-js,martin
 | `gl-js` | Rendering with MapLibre GL JS, and showing the user maps with `show_map` |
 | `native` | Rendering with MapLibre Native, which needs one more package |
 | `martin` | Listing what a Martin server serves, and rendering with it |
-| `ecosystem` | Searching Build with MapLibre for SDKs, plugins, services and products, and finding basemaps with their style URLs |
+| `ecosystem` | Searching Make with MapLibre for SDKs, plugins, services and products, and finding basemaps with their style URLs |
 
 [Tools](/maplibre-mcp/tools/) lists every tool with its parameters, and [Rendering](/maplibre-mcp/rendering/) covers what each renderer needs.
 

@@ -69,8 +69,8 @@ The images go to `map.png`, `compare.png` and `renderers.png`, or to `--out`. `n
 - `compare_renderers` does the same for one style in two renderers, for example to check that a style looks the same on the web and on mobile.
 - `show_map` shows the user an interactive map with GeoJSON layers and markers on an [OpenFreeMap](https://openfreemap.org) basemap, in clients that support MCP Apps.
 - `martin_list_sources` lists the tiles, sprites, fonts and styles a [Martin](https://martin.maplibre.org) server serves, with the URLs to use in a style.
-- `search_ecosystem` searches [Build with MapLibre](https://buildwithmaplibre.com) for SDKs, plugins, navigation, geocoding, styling and tiling libraries, hosted APIs, products and consultancies, filtered by kind and platform, with their links.
-- `find_basemaps` lists the basemaps in Build with MapLibre with their style URLs, and whether they need an API key.
+- `search_ecosystem` searches [Make with MapLibre](https://makewithmaplibre.com) for SDKs, plugins, navigation, geocoding, styling and tiling libraries, hosted APIs, products and consultancies, filtered by kind and platform, with their links.
+- `find_basemaps` lists the basemaps in Make with MapLibre with their style URLs, and whether they need an API key.
 
 The tools that take a style accept it as an object (`style`), a URL (`url`) or a file (`path`, relative to where the server runs). The [tool reference](https://birkskyum.github.io/maplibre-mcp/tools/) lists every parameter.
 
@@ -88,7 +88,7 @@ npx -y maplibre-mcp --toolsets style,gl-js,martin
 | `gl-js` | Rendering with MapLibre GL JS, `describe_gl_js_api` and `show_map` |
 | `native` | Rendering with MapLibre Native |
 | `martin` | Rendering with a Martin server, and `martin_list_sources` |
-| `ecosystem` | `search_ecosystem` and `find_basemaps`, which read the catalog of [Build with MapLibre](https://buildwithmaplibre.com) |
+| `ecosystem` | `search_ecosystem` and `find_basemaps`, which read the catalog of [Make with MapLibre](https://makewithmaplibre.com) |
 
 With any renderer on, there are `render_style` and `compare_styles`, and with two or more, `compare_renderers`. Rendering with MapLibre Native needs one more package, and rendering with Martin needs a Martin build with rendering. [Rendering](https://birkskyum.github.io/maplibre-mcp/rendering/) covers both.
 

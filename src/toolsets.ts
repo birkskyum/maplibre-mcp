@@ -1,5 +1,6 @@
 import type {McpServer} from '@modelcontextprotocol/server';
 import type {Renderer} from './render-style.js';
+import {ecosystemToolset} from './toolsets/ecosystem/index.js';
 import {glJsToolset} from './toolsets/gl-js/index.js';
 import {martinToolset} from './toolsets/martin/index.js';
 import {nativeToolset} from './toolsets/native/index.js';
@@ -14,9 +15,9 @@ export type Toolset = {
     renderer?: Renderer;
 };
 
-export const TOOLSETS: Toolset[] = [styleToolset, glJsToolset, nativeToolset, martinToolset];
+export const TOOLSETS: Toolset[] = [styleToolset, glJsToolset, nativeToolset, martinToolset, ecosystemToolset];
 
-const DEFAULT_TOOLSETS = ['style', 'gl-js'];
+const DEFAULT_TOOLSETS = ['style', 'gl-js', 'ecosystem'];
 
 /** Returns the toolsets in a comma separated list of names, or the default ones when the list is empty. */
 export function selectToolsets(list: string | undefined): Toolset[] {

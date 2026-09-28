@@ -52,7 +52,7 @@ function unknownCommand(name: string): string {
 }
 
 function usage(): string {
-    const toolsets = TOOLSETS.map(toolset => `  ${toolset.name.padEnd(8)}${toolset.description}`);
+    const toolsets = TOOLSETS.map(toolset => `  ${toolset.name.padEnd(11)}${toolset.description}`);
     const commands = Object.values(COMMANDS).map(command => `  ${command.usage.padEnd(28)}${command.description}`);
     return [
         'Usage: maplibre-mcp [--toolsets <names>] [--http [--host <address>] [--port <port>]]',
@@ -61,7 +61,7 @@ function usage(): string {
         'Runs an MCP server for MapLibre, on stdio or, with --http, over Streamable HTTP at /mcp',
         '(default address 127.0.0.1, port 3100).',
         '',
-        'Toolsets, comma separated (default: style,gl-js; "all" enables every toolset):',
+        'Toolsets, comma separated (default: style,gl-js,ecosystem; "all" enables every toolset):',
         ...toolsets,
         '',
         'MAPLIBRE_MCP_TOOLSETS works like --toolsets.',

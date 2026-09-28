@@ -3,16 +3,16 @@ import {selectToolsets} from '../src/toolsets.js';
 import {connect} from './connect.js';
 
 describe('selectToolsets', () => {
-    test('defaults to style and gl-js', () => {
-        expect(selectToolsets(undefined).map(toolset => toolset.name)).toEqual(['style', 'gl-js']);
+    test('defaults to style, gl-js and ecosystem', () => {
+        expect(selectToolsets(undefined).map(toolset => toolset.name)).toEqual(['style', 'gl-js', 'ecosystem']);
     });
 
     test('enables every toolset for all', () => {
-        expect(selectToolsets('all').map(toolset => toolset.name)).toEqual(['style', 'gl-js', 'native', 'martin']);
+        expect(selectToolsets('all').map(toolset => toolset.name)).toEqual(['style', 'gl-js', 'native', 'martin', 'ecosystem']);
     });
 
     test('lists the toolsets when a name is unknown', () => {
-        expect(() => selectToolsets('style,maps')).toThrow('Unknown toolset "maps". The toolsets are: style, gl-js, native, martin, all.');
+        expect(() => selectToolsets('style,maps')).toThrow('Unknown toolset "maps". The toolsets are: style, gl-js, native, martin, ecosystem, all.');
     });
 });
 

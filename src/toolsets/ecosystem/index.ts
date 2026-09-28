@@ -5,7 +5,7 @@ import {type Catalog, type Library, loadCatalog, type Product, type ServiceKind}
 
 export const ecosystemToolset: Toolset = {
     name: 'ecosystem',
-    description: 'Search Build with MapLibre for SDKs, plugins, services, products and basemaps',
+    description: 'Search Make with MapLibre for SDKs, plugins, services, products and basemaps',
     register(server) {
         registerSearchEcosystem(server);
         registerFindBasemaps(server);
@@ -24,7 +24,7 @@ const SERVICE_LABEL: Record<ServiceKind, string> = {
     'tile-host': 'tile hosting',
 };
 
-/** The hosted services that a library kind includes, like the pages of Build with MapLibre do. */
+/** The hosted services that a library kind includes, like the pages of Make with MapLibre do. */
 const SERVICES_OF_KIND: Partial<Record<Kind, ServiceKind>> = {
     'navigation': 'routing-api',
     'geocoding': 'geocoding-api',
@@ -45,7 +45,7 @@ function registerSearchEcosystem(server: McpServer): void {
     server.registerTool('search_ecosystem', {
         title: 'Search the MapLibre ecosystem',
         description: [
-            'Searches Build with MapLibre (buildwithmaplibre.com), a curated directory of what works with MapLibre:',
+            'Searches Make with MapLibre (makewithmaplibre.com), a curated directory of what works with MapLibre:',
             'SDKs and framework bindings, GL JS plugins, navigation and routing, geocoding, styling and tiling tools,',
             'hosted APIs, the products built with MapLibre, and consultancies. Use it to pick an SDK for a platform',
             'or framework, find a plugin or a service, or see which products use a library. Each result has its',
@@ -68,7 +68,7 @@ function registerSearchEcosystem(server: McpServer): void {
             .sort((a, b) => score(b, terms) - score(a, terms) || b.weight - a.weight || a.name.localeCompare(b.name));
         const shown = matches.slice(0, limit);
         const lines = shown.length === 0 ?
-            [`Nothing in Build with MapLibre matches${describeSearch(query, kind, platform)}. Try fewer or broader words, or another kind.`] :
+            [`Nothing in Make with MapLibre matches${describeSearch(query, kind, platform)}. Try fewer or broader words, or another kind.`] :
             [
                 `${matches.length} ${matches.length === 1 ? 'entry matches' : 'entries match'}${describeSearch(query, kind, platform)}${matches.length > shown.length ? `, the first ${shown.length} here` : ''}:`,
                 ...shown.flatMap(entry => ['', ...entry.lines]),
@@ -82,7 +82,7 @@ function registerFindBasemaps(server: McpServer): void {
     server.registerTool('find_basemaps', {
         title: 'Find basemaps',
         description: [
-            'Lists the basemaps in Build with MapLibre (buildwithmaplibre.com): ready-made MapLibre styles from',
+            'Lists the basemaps in Make with MapLibre (makewithmaplibre.com): ready-made MapLibre styles from',
             'OpenFreeMap, Protomaps, MapTiler, Stadia Maps, VersaTiles and others, with their style URLs and whether they need an',
             'API key, plus raster and elevation tiles. Pass a style URL as url to render_style or compare_styles to see it,',
             'or start a style from it.',
@@ -100,7 +100,7 @@ function registerFindBasemaps(server: McpServer): void {
             .filter(basemap => terms.every(term => `${basemap.name} ${basemap.provider} ${basemap.description}`.toLowerCase().includes(term)))
             .sort((a, b) => Number(b.free) - Number(a.free) || a.provider.localeCompare(b.provider) || a.name.localeCompare(b.name));
         const lines = basemaps.length === 0 ?
-            ['No basemap in Build with MapLibre matches. Try fewer words, or leave out free.'] :
+            ['No basemap in Make with MapLibre matches. Try fewer words, or leave out free.'] :
             basemaps.flatMap(basemap => {
                 const source = basemap.styleUrl ?
                     `  Style URL: ${basemap.styleUrl}` :
@@ -131,7 +131,7 @@ function entries(catalog: Catalog): Entry[] {
                 text: searchText(service.name, SERVICE_LABEL[service.kind], about, makerNames.get(service.maker ?? '')),
                 lines: [
                     `${service.name} (hosted ${SERVICE_LABEL[service.kind]})${about ? `: ${about}` : ''}`,
-                    `  ${service.link}${service.sponsored ? ' (a sponsored listing on Build with MapLibre)' : ''}`,
+                    `  ${service.link}${service.sponsored ? ' (a sponsored listing on Make with MapLibre)' : ''}`,
                 ],
             };
         }),

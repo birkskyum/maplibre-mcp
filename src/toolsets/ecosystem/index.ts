@@ -1,7 +1,7 @@
 import type {McpServer} from '@modelcontextprotocol/server';
 import {z} from 'zod';
 import type {Toolset} from '../../toolsets.js';
-import {type Catalog, type Library, loadCatalog, type Product, type ServiceKind} from './catalog.js';
+import {type Basemap, type Catalog, type Library, loadCatalog, type Product, type ServiceKind} from './catalog.js';
 
 export const ecosystemToolset: Toolset = {
     name: 'ecosystem',
@@ -12,7 +12,7 @@ export const ecosystemToolset: Toolset = {
     },
 };
 
-const KINDS = ['sdk', 'plugin', 'navigation', 'geocoding', 'styling', 'tile-infrastructure', 'service', 'product', 'consultant'] as const;
+const KINDS = ['sdk', 'plugin', 'routing', 'geocoding', 'styling', 'tiling', 'service', 'product', 'consultant'] as const;
 type Kind = (typeof KINDS)[number];
 
 const PLATFORMS = ['Web', 'iOS', 'Android', 'Desktop', 'Server'] as const;
@@ -26,10 +26,10 @@ const SERVICE_LABEL: Record<ServiceKind, string> = {
 
 /** The hosted services that a library kind includes, like the pages of Make with MapLibre do. */
 const SERVICES_OF_KIND: Partial<Record<Kind, ServiceKind>> = {
-    'navigation': 'routing-api',
+    'routing': 'routing-api',
     'geocoding': 'geocoding-api',
     'styling': 'style-editor',
-    'tile-infrastructure': 'tile-host',
+    'tiling': 'tile-host',
 };
 
 type Entry = {
@@ -46,14 +46,14 @@ function registerSearchEcosystem(server: McpServer): void {
         title: 'Search the MapLibre ecosystem',
         description: [
             'Searches Make with MapLibre (makewithmaplibre.com), a curated directory of what works with MapLibre:',
-            'SDKs and framework bindings, GL JS plugins, navigation and routing, geocoding, styling and tiling tools,',
+            'SDKs and framework bindings, GL JS plugins, routing and navigation, geocoding, styling and tiling tools,',
             'hosted APIs, the products built with MapLibre, and consultancies. Use it to pick an SDK for a platform',
             'or framework, find a plugin or a service, or see which products use a library. Each result has its',
             'links and a page with more. Follow up with find_basemaps for style URLs to render.',
         ].join(' '),
         inputSchema: z.object({
             query: z.string().optional().describe('Words that each result has to contain, like "react", "draw" or "routing". Leave it out to list the most prominent entries.'),
-            kind: z.enum(KINDS).optional().describe('Only entries of this kind. navigation, geocoding, styling and tile-infrastructure include the hosted services of that kind, and service lists all of them.'),
+            kind: z.enum(KINDS).optional().describe('Only entries of this kind. routing, geocoding, styling and tiling include the hosted services of that kind, and service lists all of them.'),
             platform: z.enum(PLATFORMS).optional().describe('Only entries that run on this platform. Hosted services and consultancies have no platform and are kept.'),
             limit: z.number().int().min(1).max(50).default(10).describe('The most results to return.'),
         }),
@@ -73,7 +73,7 @@ function registerSearchEcosystem(server: McpServer): void {
                 `${matches.length} ${matches.length === 1 ? 'entry matches' : 'entries match'}${describeSearch(query, kind, platform)}${matches.length > shown.length ? `, the first ${shown.length} here` : ''}:`,
                 ...shown.flatMap(entry => ['', ...entry.lines]),
             ];
-        lines.push('', `From ${new URL('catalog.json', catalog.site).href}, generated ${catalog.generatedAt.slice(0, 10)}.`);
+        lines.push('', sourceLine(catalog));
         return {content: [{type: 'text', text: lines.join('\n')}]};
     });
 }
@@ -101,22 +101,23 @@ function registerFindBasemaps(server: McpServer): void {
             .sort((a, b) => Number(b.free) - Number(a.free) || a.provider.localeCompare(b.provider) || a.name.localeCompare(b.name));
         const lines = basemaps.length === 0 ?
             ['No basemap in Make with MapLibre matches. Try fewer words, or leave out free.'] :
-            basemaps.flatMap(basemap => {
-                const source = basemap.styleUrl ?
-                    `  Style URL: ${basemap.styleUrl}` :
-                    `  Tiles, to add as a source: ${[basemap.tileUrl ?? []].flat().join(', ')}`;
-                return ['', `${basemap.name} by ${basemap.provider}, ${basemap.free ? 'free, no API key' : 'needs an API key'}: ${basemap.description}`, source, `  More: ${basemap.url}`];
-            });
+            basemaps.flatMap(basemap => ['', `${basemap.name} by ${basemap.provider}, ${basemap.free ? 'free, no API key' : 'needs an API key'}: ${basemap.description}`, ...basemapSetup(basemap), `  More: ${basemap.url}`]);
         if (basemaps.some(basemap => !basemap.free)) {
             lines.push('', 'The style URLs of basemaps that need an API key fail until the provider\'s key is added to them.');
         }
-        lines.push('', `From ${new URL('catalog.json', catalog.site).href}, generated ${catalog.generatedAt.slice(0, 10)}.`);
+        lines.push('', sourceLine(catalog));
         return {content: [{type: 'text', text: lines.join('\n').replace(/^\n/, '')}]};
     });
 }
 
 function entries(catalog: Catalog): Entry[] {
-    const libraryNames = new Map(catalog.libraries.map(library => [library.slug, library.name]));
+    // A product's uses lists the slugs of libraries, basemaps and services, which the catalog keeps unique across all three.
+    const usedNames = new Map([
+        ...catalog.libraries.map(library => [library.slug, library.name] as const),
+        ...catalog.basemaps.map(basemap => [basemap.slug, `${basemap.name} by ${basemap.provider}`] as const),
+        ...catalog.services.map(service => [service.slug, service.name] as const),
+    ]);
+    const categoryNames = new Map(catalog.productCategories.map(category => [category.slug, category.name]));
     const makerNames = new Map(catalog.makers.map(maker => [maker.slug, maker.name]));
     return [
         ...catalog.libraries.map(library => libraryEntry(library, makerNames)),
@@ -135,7 +136,7 @@ function entries(catalog: Catalog): Entry[] {
                 ],
             };
         }),
-        ...catalog.products.map(product => productEntry(product, libraryNames, makerNames)),
+        ...catalog.products.map(product => productEntry(product, usedNames, categoryNames, makerNames)),
         ...catalog.makers.filter(maker => maker.consultancy).map((maker): Entry => ({
             kinds: ['consultant'],
             name: maker.name,
@@ -163,26 +164,28 @@ function libraryEntry(library: Library, makerNames: Map<string, string>): Entry 
         name: library.name,
         weight: library.weight ?? 0,
         platforms: library.platforms,
-        text: searchText(library.name, library.kind, library.tagline, library.description, ...library.platforms, ...library.frameworks, ...library.languages, ...library.renderers, makerNames.get(library.maker ?? '')),
+        text: searchText(library.name, library.kind, library.group, library.tagline, library.description, ...library.platforms, ...library.frameworks, ...library.languages, ...library.renderers, makerNames.get(library.maker ?? '')),
         lines: [
-            `${library.name} (${library.kind})${library.tagline ? `: ${library.tagline}` : ''}`,
+            `${library.name} (${[library.kind, library.group].filter(Boolean).join(', ')})${library.tagline ? `: ${library.tagline}` : ''}`,
             `  ${library.description}`,
             ...(facts.length > 0 ? [`  ${facts.join(' · ')}`] : []),
             `  ${links.join(', ')}`,
+            ...(library.demo ? [`  Live demo: ${library.demo}`] : []),
             `  More: ${library.url}`,
         ],
     };
 }
 
-function productEntry(product: Product, libraryNames: Map<string, string>, makerNames: Map<string, string>): Entry {
-    const builtWith = Object.values(product.uses).flat().map(slug => libraryNames.get(slug) ?? slug);
-    const facts = [product.categories, product.renderers, product.platforms].map(list => list.join(', ')).filter(Boolean);
+function productEntry(product: Product, usedNames: Map<string, string>, categoryNames: Map<string, string>, makerNames: Map<string, string>): Entry {
+    const builtWith = product.uses.map(slug => usedNames.get(slug) ?? slug);
+    const categories = product.categories.map(slug => categoryNames.get(slug) ?? slug);
+    const facts = [categories, product.renderers, product.platforms].map(list => list.join(', ')).filter(Boolean);
     return {
         kinds: ['product'],
         name: product.name,
         weight: product.weight ?? 0,
         platforms: product.platforms,
-        text: searchText(product.name, 'product', product.tagline, product.description, ...product.categories, ...product.renderers, ...product.platforms, ...product.frameworks, ...builtWith, makerNames.get(product.maker ?? '')),
+        text: searchText(product.name, 'product', product.tagline, product.description, ...categories, ...product.renderers, ...product.platforms, ...product.frameworks, ...builtWith, makerNames.get(product.maker ?? '')),
         lines: [
             `${product.name} (product)${product.tagline ? `: ${product.tagline}` : ''}`,
             `  ${product.description}`,
@@ -191,6 +194,28 @@ function productEntry(product: Product, libraryNames: Map<string, string>, maker
             `  More: ${product.url}`,
         ],
     };
+}
+
+/** How to put a basemap on a map, with what the provider requires the map to show. */
+function basemapSetup(basemap: Basemap): string[] {
+    const lines = basemap.styleUrl ?
+        [`  Style URL: ${basemap.styleUrl}`] :
+        [
+            // MapLibre assumes 512 pixel tiles, so a source of 256 pixel tiles has to say so.
+            `  Tiles, to add as a ${basemap.encoding ? 'raster-dem' : 'raster'} source with tileSize ${basemap.tileSize ?? 256}: ${[basemap.tileUrl ?? []].flat().join(', ')}`,
+            ...(basemap.encoding ? [`  Elevation encoding: ${basemap.encoding}`] : []),
+        ];
+    if (basemap.attribution) lines.push(`  Attribution the map has to show: ${basemap.attribution}`);
+    if (basemap.logoControl) lines.push(`  ${basemap.provider}'s terms require its logo on the map: add the control from the npm package ${basemap.logoControl}.`);
+    return lines;
+}
+
+/** Where the results come from, with the credit that the catalog's license asks for when they are passed on. */
+function sourceLine(catalog: Catalog): string {
+    const generated = catalog.generatedAt.slice(0, 10);
+    if (!catalog.attribution) return `From ${new URL('catalog.json', catalog.site).href}, generated ${generated}.`;
+    const license = catalog.license?.startsWith('CC-') ? catalog.license.replaceAll('-', ' ') : catalog.license;
+    return `Source: ${catalog.attribution}${license ? `, ${license}` : ''}, generated ${generated}. Credit it and link to ${catalog.attributionUrl ?? catalog.site} when you pass this on.`;
 }
 
 function searchText(...parts: Array<string | undefined>): string {

@@ -5,6 +5,16 @@ export type Catalog = {
     schemaVersion: number;
     site: string;
     generatedAt: string;
+    copyright?: string;
+    copyrightHolder?: string;
+    /** An SPDX identifier, like CC-BY-4.0. */
+    license?: string;
+    licenseUrl?: string;
+    /** The credit the license asks for when the data is passed on. */
+    attribution?: string;
+    /** Where that credit links to. */
+    attributionUrl?: string;
+    productCategories: ProductCategory[];
     libraries: Library[];
     basemaps: Basemap[];
     services: Service[];
@@ -12,16 +22,27 @@ export type Catalog = {
     makers: Maker[];
 };
 
-export type LibraryKind = 'sdk' | 'plugin' | 'navigation' | 'geocoding' | 'styling' | 'tile-infrastructure';
+export type LibraryKind = 'sdk' | 'plugin' | 'routing' | 'geocoding' | 'styling' | 'tiling';
+
+export type ProductCategory = {
+    slug: string;
+    name: string;
+    description: string;
+    url: string;
+};
 
 export type Library = {
     slug: string;
     name: string;
     kind: LibraryKind;
+    /** The section of its page on Make with MapLibre, for SDKs and plugins, like framework or drawing. */
+    group?: string;
     tagline?: string;
     description: string;
     link: string;
     url: string;
+    /** A live demo on Make with MapLibre. */
+    demo?: string;
     repository?: string;
     npm?: string;
     documentation?: string;
@@ -37,10 +58,19 @@ export type Library = {
 export type Basemap = {
     slug: string;
     name: string;
+    type?: 'style' | 'raster' | 'terrain';
     provider: string;
     description: string;
     styleUrl?: string;
     tileUrl?: string | string[];
+    /** The pixel size of the tiles at tileUrl, 256 when absent. */
+    tileSize?: 256 | 512;
+    /** The encoding of elevation tiles. */
+    encoding?: 'terrarium' | 'mapbox';
+    /** The credit the map has to show, as HTML. Styles usually carry their own. */
+    attribution?: string;
+    /** The npm package of a logo control that the provider's terms require on every map. */
+    logoControl?: string;
     free: boolean;
     url: string;
 };
@@ -65,11 +95,13 @@ export type Product = {
     description: string;
     link: string;
     url: string;
+    /** Slugs of productCategories. */
     categories: string[];
     renderers: string[];
     platforms: string[];
     frameworks: string[];
-    uses: Record<'sdks' | 'plugins' | 'routing' | 'geocoding' | 'tileInfrastructure', string[]>;
+    /** Slugs of the libraries, basemaps and services it is built with. */
+    uses: string[];
     maker?: string;
     weight?: number;
 };

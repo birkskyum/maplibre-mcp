@@ -12,7 +12,7 @@ export const ecosystemToolset: Toolset = {
     },
 };
 
-const KINDS = ['sdk', 'plugin', 'routing', 'geocoding', 'styling', 'tiling', 'service', 'product', 'consultant'] as const;
+const KINDS = ['sdk', 'plugin', 'routing', 'geocoding', 'styling', 'tiling', 'ai', 'service', 'product', 'consultant'] as const;
 type Kind = (typeof KINDS)[number];
 
 const PLATFORMS = ['Web', 'iOS', 'Android', 'Desktop', 'Server'] as const;
@@ -46,14 +46,14 @@ function registerSearchEcosystem(server: McpServer): void {
         title: 'Search the MapLibre ecosystem',
         description: [
             'Searches Make with MapLibre (makewithmaplibre.com), a curated directory of what works with MapLibre:',
-            'SDKs and framework bindings, GL JS plugins, routing and navigation, geocoding, styling and tiling tools,',
+            'SDKs and framework bindings, GL JS plugins, routing and navigation, geocoding, styling and tiling tools, AI tools (MCP servers and agent skills),',
             'hosted APIs, the products built with MapLibre, and consultancies. Use it to pick an SDK for a platform',
             'or framework, find a plugin or a service, or see which products use a library. Each result has its',
             'links and a page with more. Follow up with find_basemaps for style URLs to render.',
         ].join(' '),
         inputSchema: z.object({
             query: z.string().optional().describe('Words that each result has to contain, like "react", "draw" or "routing". Leave it out to list the most prominent entries.'),
-            kind: z.enum(KINDS).optional().describe('Only entries of this kind. routing, geocoding, styling and tiling include the hosted services of that kind, and service lists all of them.'),
+            kind: z.enum(KINDS).optional().describe('Only entries of this kind. ai is MCP servers and agent skills for MapLibre. routing, geocoding, styling and tiling include the hosted services of that kind, and service lists all of them.'),
             platform: z.enum(PLATFORMS).optional().describe('Only entries that run on this platform. Hosted services and consultancies have no platform and are kept.'),
             limit: z.number().int().min(1).max(50).default(10).describe('The most results to return.'),
         }),

@@ -91,7 +91,7 @@ claude mcp add maplibre -- npx -y maplibre-mcp --toolsets style,gl-js,martin
 | `martin` | Listing what a Martin server serves, and rendering with it |
 | `ecosystem` | Searching Make with MapLibre for SDKs, plugins, services and products, and finding basemaps with their style URLs |
 
-[Tools](/maplibre-mcp/tools/) lists every tool with its parameters, and [Rendering](/maplibre-mcp/rendering/) covers what each renderer needs.
+[Tools](/maplibre-mcp/tools/) lists every tool with its parameters, [Rendering](/maplibre-mcp/rendering/) covers what each renderer needs, and [Libraries and basemaps](/maplibre-mcp/ecosystem/) how the `ecosystem` tools work.
 
 ## Try it
 
@@ -100,6 +100,8 @@ Open a project with a MapLibre style, and ask for something like this:
 > Check that style.json is valid, then render it around Copenhagen at zoom 12.
 
 > Make the motorways red in style.json. Check that the style is still valid, and show me a before and after.
+
+> I'm building a hiking web app in React. Which MapLibre libraries and free map data should I use for 3D terrain and drawing routes?
 
 The agent picks the tools itself. [Examples](/maplibre-mcp/examples/) shows what it does with prompts like these.
 

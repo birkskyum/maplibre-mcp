@@ -231,3 +231,74 @@ The agent gets a short confirmation back, since only the user sees the map:
 ```text
 Showing the user a map with 2 layers and 2 markers.
 ```
+
+## Pick libraries and map data for an app
+
+With the `ecosystem` toolset, the agent answers "what should I use?" from [Make with MapLibre](https://makewithmaplibre.com). In this Claude Code session, only its two tools were available. The prompt was:
+
+> I'm building a hiking web app in React. I want a MapLibre map with a free basemap and 3D terrain, and users should be able to draw a planned route on it. Which libraries and map data should I use, and how do I set them up?
+
+The agent searched for each part of the question, with these calls to `search_ecosystem`:
+
+```json
+{"query": "react", "platform": "Web"}
+{"query": "draw", "kind": "plugin"}
+{"kind": "routing"}
+```
+
+And these to `find_basemaps`:
+
+```json
+{"free": true}
+{"query": "terrain"}
+{"query": "elevation"}
+```
+
+The search for drawing plugins returned eight, the first two here:
+
+```text
+8 entries match "draw", kind plugin:
+
+maplibre-gl-terradraw (plugin, drawing): Drawing and measuring toolbar on Terra Draw
+  A MapLibre GL JS control that puts Terra Draw behind a ready-made toolbar: points, lines, polygons, circles, freehand and text, with select, undo, GeoJSON download, and a measuring variant.
+  Web · JavaScript, TypeScript · MapLibre GL JS · MIT
+  https://github.com/watergis/maplibre-gl-terradraw, docs https://terradraw.water-gis.com/, npm https://www.npmjs.com/package/@watergis/maplibre-gl-terradraw
+  Live demo: https://makewithmaplibre.com/plugins/maplibre-gl-terradraw/#live-demo
+  More: https://makewithmaplibre.com/plugins/maplibre-gl-terradraw/
+
+Terra Draw (plugin, drawing): Multi-library drawing tool
+  A cross-library drawing tool that works with MapLibre GL JS, Leaflet, OpenLayers, and Google Maps. Draw and edit geometries with a consistent API.
+  Web · JavaScript, TypeScript · MapLibre GL JS · MIT
+  https://github.com/JamesLMilner/terra-draw, docs https://terradraw.io, npm https://www.npmjs.com/package/terra-draw
+  Live demo: https://makewithmaplibre.com/plugins/terra-draw/#live-demo
+  More: https://makewithmaplibre.com/plugins/terra-draw/
+```
+
+The search for terrain found elevation tiles, with how to add them and the credit they need:
+
+```text
+Terrarium Elevation by AWS Open Data, free, no API key: Global elevation tiles in Terrarium format. Use for hillshading and 3D terrain in MapLibre.
+  Tiles, to add as a raster-dem source with tileSize 256: https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png
+  Elevation encoding: terrarium
+  More: https://makewithmaplibre.com/basemaps/styles/aws-terrarium/
+
+Mapterhorn Terrain by Mapterhorn, free, no API key: Open elevation tiles in Terrarium format: 30 m worldwide and 1 m or finer where countries publish lidar data. Free with no API key; credit Mapterhorn and its sources. Use for hillshading and 3D terrain in MapLibre.
+  Tiles, to add as a raster-dem source with tileSize 512: https://tiles.mapterhorn.com/{z}/{x}/{y}.webp
+  Elevation encoding: terrarium
+  Attribution the map has to show: <a href="https://mapterhorn.com/attribution">© Mapterhorn</a>
+  More: https://makewithmaplibre.com/basemaps/styles/mapterhorn/
+```
+
+It recommended this stack, with setup code for each part:
+
+| Need | Pick | Why |
+|---|---|---|
+| Map renderer | `maplibre-gl` | The core library |
+| React binding | [React Map GL](https://visgl.github.io/react-map-gl/) (`react-map-gl/maplibre`) | Most widely used declarative wrapper, MIT |
+| Basemap | [Maptoolkit Hiking](https://makewithmaplibre.com/basemaps/styles/maptoolkit-hiking/) | Free, no API key, trails brought forward, hillshading and contour lines |
+| Elevation | [Mapterhorn Terrain](https://makewithmaplibre.com/basemaps/styles/mapterhorn/) | Free, no API key, 30 m worldwide and 1 m or finer where lidar exists |
+| Drawing | [maplibre-gl-terradraw](https://makewithmaplibre.com/plugins/maplibre-gl-terradraw/) | Ready-made toolbar on Terra Draw, with select, undo, and GeoJSON download |
+
+It passed on what the providers require: Maptoolkit's logo control, and Mapterhorn's attribution, with `tileSize` 512 and the `terrarium` encoding in the `raster-dem` source. For drawing routes that follow trails, it pointed to Valhalla, GraphHopper and openrouteservice from the routing search. It ended with the credit the tools ask for:
+
+> Sources: [Make with MapLibre](https://makewithmaplibre.com/) by Birk Skyum, CC BY 4.0.

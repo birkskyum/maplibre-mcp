@@ -22,7 +22,7 @@ export type Catalog = {
     makers: Maker[];
 };
 
-export type LibraryKind = 'sdk' | 'plugin' | 'routing' | 'geocoding' | 'styling' | 'tiling';
+export type LibraryKind = 'sdk' | 'plugin' | 'routing' | 'geocoding' | 'styling' | 'tiling' | 'ai';
 
 export type ProductCategory = {
     slug: string;

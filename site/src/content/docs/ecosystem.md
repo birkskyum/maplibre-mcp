@@ -23,7 +23,7 @@ The catalog has a schema version. This server reads version 1, and asks you to u
 | Parameter | What it does |
 | --- | --- |
 | `query` | Words that every result has to contain, in its name, description, platforms, frameworks, languages or maker. Leave it out to list the most prominent entries. |
-| `kind` | `sdk`, `plugin`, `routing`, `geocoding`, `styling`, `tiling`, `service`, `product` or `consultant`. `routing`, `geocoding`, `styling` and `tiling` include the hosted services of that kind. |
+| `kind` | `sdk`, `plugin`, `routing`, `geocoding`, `styling`, `tiling`, `ai`, `service`, `product` or `consultant`. `ai` is MCP servers and agent skills for MapLibre. `routing`, `geocoding`, `styling` and `tiling` include the hosted services of that kind. |
 | `platform` | `Web`, `iOS`, `Android`, `Desktop` or `Server`. Hosted services and consultancies have no platform, and are kept. |
 | `limit` | The most results to return, 10 by default. |
 

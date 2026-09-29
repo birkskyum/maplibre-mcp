@@ -35,6 +35,11 @@ const catalog = {
             platforms: ['Web'], languages: ['TypeScript'], frameworks: [], renderers: ['MapLibre GL JS'],
         },
         {
+            slug: 'maplibre-agent-skills', name: 'MapLibre Agent Skills', kind: 'ai', group: 'skills', tagline: 'Guidance that helps AI assistants write MapLibre code',
+            description: 'Agent skills for MapLibre GL JS.', link: 'https://github.com/maplibre/maplibre-agent-skills',
+            url: 'https://makewithmaplibre.com/ai/maplibre-agent-skills/', license: 'MIT', platforms: ['Web'], languages: [], frameworks: [], renderers: ['MapLibre GL JS'],
+        },
+        {
             slug: 'valhalla', name: 'Valhalla', kind: 'routing', tagline: 'Open-source routing engine',
             description: 'A routing engine for OpenStreetMap data.', link: 'https://github.com/valhalla/valhalla',
             url: 'https://makewithmaplibre.com/routing/valhalla/', platforms: ['Server'], languages: ['C++'], frameworks: [], renderers: [],
@@ -151,6 +156,13 @@ describe('ecosystem', () => {
         expect(text).toContain('Immich (product): Self-hosted photo and video backup');
         expect(text).toContain('  Social & Messaging · MapLibre GL JS · Web, Android, iOS · built with React Map GL, Valhalla, Liberty by OpenFreeMap, Stadia Maps');
         expect(text).toContain('  Map: https://immich.app');
+    });
+
+    test('finds AI tools for MapLibre', async () => {
+        const client = await connect('ecosystem');
+        const text = textOf(await client.callTool({name: 'search_ecosystem', arguments: {kind: 'ai'}}));
+        expect(text).toContain('1 entry matches kind ai:');
+        expect(text).toContain('MapLibre Agent Skills (ai, skills): Guidance that helps AI assistants write MapLibre code');
     });
 
     test('finds consultancies', async () => {

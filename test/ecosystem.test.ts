@@ -72,6 +72,7 @@ const catalog = {
     products: [
         {
             slug: 'immich', name: 'Immich', tagline: 'Self-hosted photo and video backup', description: 'Shows geotagged photos on a map.',
+            maplibre: 'Its web map is built on maplibre-gl.',
             link: 'https://immich.app', url: 'https://makewithmaplibre.com/products/immich/', categories: ['social-messaging'],
             renderers: ['MapLibre GL JS'], platforms: ['Web', 'Android', 'iOS'], frameworks: [],
             uses: ['react-map-gl', 'valhalla', 'openfreemap-liberty', 'stadia-routing'], added: '2026-03-29', weight: 4,
@@ -160,6 +161,7 @@ describe('ecosystem', () => {
         const text = textOf(await client.callTool({name: 'search_ecosystem', arguments: {query: 'valhalla', kind: 'product'}}));
         expect(text).toContain('Immich (product): Self-hosted photo and video backup');
         expect(text).toContain('  Social & Messaging · MapLibre GL JS · Web, Android, iOS · built with React Map GL, Valhalla, Liberty by OpenFreeMap, Stadia Maps');
+        expect(text).toContain('  MapLibre: Its web map is built on maplibre-gl.');
         expect(text).toContain('  Map: https://immich.app');
     });
 

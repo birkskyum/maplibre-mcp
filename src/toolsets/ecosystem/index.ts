@@ -185,10 +185,11 @@ function productEntry(product: Product, usedNames: Map<string, string>, category
         name: product.name,
         weight: product.weight ?? 0,
         platforms: product.platforms,
-        text: searchText(product.name, 'product', product.tagline, product.description, ...(product.offers ?? []), ...categories, ...product.renderers, ...product.platforms, ...product.frameworks, ...builtWith, makerNames.get(product.maker ?? '')),
+        text: searchText(product.name, 'product', product.tagline, product.description, product.maplibre, ...(product.offers ?? []), ...categories, ...product.renderers, ...product.platforms, ...product.frameworks, ...builtWith, makerNames.get(product.maker ?? '')),
         lines: [
             `${product.name} (product)${product.tagline ? `: ${product.tagline}` : ''}`,
             `  ${product.description}`,
+            ...(product.maplibre ? [`  MapLibre: ${product.maplibre}`] : []),
             ...(product.offers ? [`  Offers map makers: ${product.offers.join('; ')}`] : []),
             `  ${facts.join(' · ')}${builtWith.length > 0 ? ` · built with ${builtWith.join(', ')}` : ''}`,
             `  Map: ${product.link}`,

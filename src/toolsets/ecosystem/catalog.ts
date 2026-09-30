@@ -104,6 +104,8 @@ export type Product = {
     uses: string[];
     /** What it offers someone making a map product (APIs, data, self-hostable code), for products a map maker can build on. */
     offers?: string[];
+    /** How it uses MapLibre. */
+    maplibre?: string;
     maker?: string;
     weight?: number;
 };

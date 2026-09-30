@@ -38,7 +38,7 @@ maplibre-gl-terradraw (plugin, drawing): Drawing and measuring toolbar on Terra 
   More: https://makewithmaplibre.com/plugins/maplibre-gl-terradraw/
 ```
 
-A product also says what it is built with, which answers questions like "which apps use Valhalla?". A hosted service that is a sponsored listing on Make with MapLibre says so, for the agent to pass on.
+A product also says what it is built with, which answers questions like "which apps use Valhalla?". Products a map maker can build on (maps APIs, GIS tools, data sources, self-hostable apps) also list what they offer, and searches match those points, so "geocoding" finds the platforms with a geocoding API. A hosted service that is a sponsored listing on Make with MapLibre says so, for the agent to pass on.
 
 ## Basemaps
 

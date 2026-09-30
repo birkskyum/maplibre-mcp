@@ -76,6 +76,11 @@ const catalog = {
             renderers: ['MapLibre GL JS'], platforms: ['Web', 'Android', 'iOS'], frameworks: [],
             uses: ['react-map-gl', 'valhalla', 'openfreemap-liberty', 'stadia-routing'], added: '2026-03-29', weight: 4,
         },
+        {
+            slug: 'tile-co', name: 'Tile Co', tagline: 'Maps API', description: 'Map tiles and APIs.', link: 'https://tile.example',
+            url: 'https://makewithmaplibre.com/products/tile-co/', categories: ['social-messaging'], renderers: ['MapLibre GL JS'], platforms: ['Web'],
+            frameworks: [], uses: [], offers: ['Vector map tiles with MapLibre styles', 'Geocoding and reverse geocoding API'], added: '2026-09-30',
+        },
     ],
     makers: [
         {slug: 'geoagency', name: 'Geo Agency', link: 'https://geo.example', description: 'Builds MapLibre apps for clients.', consultancy: true, url: 'https://makewithmaplibre.com/makers/geoagency/'},
@@ -163,6 +168,13 @@ describe('ecosystem', () => {
         const text = textOf(await client.callTool({name: 'search_ecosystem', arguments: {kind: 'ai'}}));
         expect(text).toContain('1 entry matches kind ai:');
         expect(text).toContain('MapLibre Agent Skills (ai, skills): Guidance that helps AI assistants write MapLibre code');
+    });
+
+    test('finds products by what they offer map makers', async () => {
+        const client = await connect('ecosystem');
+        const text = textOf(await client.callTool({name: 'search_ecosystem', arguments: {query: 'geocoding', kind: 'product'}}));
+        expect(text).toContain('Tile Co (product): Maps API');
+        expect(text).toContain('  Offers map makers: Vector map tiles with MapLibre styles; Geocoding and reverse geocoding API');
     });
 
     test('finds consultancies', async () => {

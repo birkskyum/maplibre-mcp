@@ -102,6 +102,8 @@ export type Product = {
     frameworks: string[];
     /** Slugs of the libraries, basemaps and services it is built with. */
     uses: string[];
+    /** What it offers someone making a map product (APIs, data, self-hostable code), for products a map maker can build on. */
+    offers?: string[];
     maker?: string;
     weight?: number;
 };

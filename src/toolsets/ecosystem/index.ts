@@ -48,7 +48,7 @@ function registerSearchEcosystem(server: McpServer): void {
             'Searches Make with MapLibre (makewithmaplibre.com), a curated directory of what works with MapLibre:',
             'SDKs and framework bindings, GL JS plugins, routing and navigation, geocoding, styling and tiling tools, AI tools (MCP servers and agent skills),',
             'hosted APIs, the products built with MapLibre, and consultancies. Use it to pick an SDK for a platform',
-            'or framework, find a plugin or a service, or see which products use a library. Each result has its',
+            'or framework, find a plugin or a service, find a platform or data source to build on, or see which products use a library. Each result has its',
             'links and a page with more. Follow up with find_basemaps for style URLs to render.',
         ].join(' '),
         inputSchema: z.object({
@@ -185,10 +185,11 @@ function productEntry(product: Product, usedNames: Map<string, string>, category
         name: product.name,
         weight: product.weight ?? 0,
         platforms: product.platforms,
-        text: searchText(product.name, 'product', product.tagline, product.description, ...categories, ...product.renderers, ...product.platforms, ...product.frameworks, ...builtWith, makerNames.get(product.maker ?? '')),
+        text: searchText(product.name, 'product', product.tagline, product.description, ...(product.offers ?? []), ...categories, ...product.renderers, ...product.platforms, ...product.frameworks, ...builtWith, makerNames.get(product.maker ?? '')),
         lines: [
             `${product.name} (product)${product.tagline ? `: ${product.tagline}` : ''}`,
             `  ${product.description}`,
+            ...(product.offers ? [`  Offers map makers: ${product.offers.join('; ')}`] : []),
             `  ${facts.join(' · ')}${builtWith.length > 0 ? ` · built with ${builtWith.join(', ')}` : ''}`,
             `  Map: ${product.link}`,
             `  More: ${product.url}`,

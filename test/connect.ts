@@ -13,9 +13,13 @@ export async function connect(toolsets: string): Promise<Client> {
     return client;
 }
 
-/** Serves JSON documents, and tiles given as bytes, by path on a local port, and resolves to the server's origin. */
+/**
+ * Serves JSON documents, and tiles given as bytes, by path on a local port, and resolves to the server's origin.
+ * Every answer allows other origins, as tile and glyph servers do, so a page can read its status.
+ */
 export function serveJson(documents: Record<string, unknown>): Promise<{origin: string; server: Server}> {
     const server = createHttpServer((request, response) => {
+        response.setHeader('access-control-allow-origin', '*');
         const document = documents[request.url ?? ''];
         if (document === undefined) {
             response.writeHead(404).end();

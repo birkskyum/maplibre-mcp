@@ -1,6 +1,6 @@
 import {PNG} from 'pngjs';
 import {describe, expect, test} from 'vitest';
-import {connect, textOf} from './connect.js';
+import {connect, serveJson, textOf} from './connect.js';
 
 const BLUE_STYLE = {version: 8, sources: {}, layers: [{id: 'background', type: 'background', paint: {'background-color': '#3366cc'}}]};
 
@@ -41,6 +41,22 @@ describe('render_style', () => {
             layers: [{id: 'icon', type: 'symbol', source: 'point', layout: {'icon-image': 'harbor'}}],
         }}});
         expect(textOf(result)).toContain('Images the style uses but the sprite lacks: harbor.');
+    });
+
+    test('reports font stacks whose glyphs do not load', async () => {
+        const client = await connect('gl-js');
+        const {origin, server} = await serveJson({});
+        try {
+            const result = await client.callTool({name: 'render_style', arguments: {width: 120, height: 80, style: {
+                version: 8,
+                glyphs: `${origin}/fonts/{fontstack}/{range}.pbf`,
+                sources: {point: {type: 'geojson', data: {type: 'Point', coordinates: [0, 0]}}},
+                layers: [{id: 'label', type: 'symbol', source: 'point', layout: {'text-field': 'Harbor', 'text-font': ['Noto Sans Italic']}}],
+            }}});
+            expect(textOf(result)).toContain('Glyphs did not load for these font stacks, so their text is drawn with local fonts: "Noto Sans Italic" (HTTP 404).');
+        } finally {
+            server.close();
+        }
     });
 
     test('points to Native\'s missing features', async () => {

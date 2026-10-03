@@ -36,6 +36,12 @@ const PLAYWRIGHT_VERSION: string = require('playwright-core/package.json').versi
 const MAPLIBRE_DIST = path.dirname(require.resolve('maplibre-gl/dist/maplibre-gl.mjs'));
 const PMTILES_SCRIPT = path.join(path.dirname(require.resolve('pmtiles/package.json')), 'dist/pmtiles.js');
 
+type FailedRequest = {
+    url: string;
+    /** Why it failed, like HTTP 404. */
+    reason: string;
+};
+
 const IDLE_TIMEOUT_MS = 30_000;
 const MAX_ERRORS = 20;
 
@@ -71,11 +77,16 @@ async function render({style, camera, width, height, attribution = true}: Render
     origin ??= serveAssets();
     const [pageOrigin, instance] = await Promise.all([origin, getBrowser()]);
     const page = await instance.newPage({viewport: {width, height}});
+    const failed: FailedRequest[] = [];
+    page.on('response', response => {
+        if (response.status() >= 400) failed.push({url: response.url(), reason: `HTTP ${response.status()}`});
+    });
+    page.on('requestfailed', request => failed.push({url: request.url(), reason: request.failure()?.errorText ?? 'no answer'}));
     try {
         await page.goto(pageOrigin);
         await page.waitForFunction(() => window.maplibregl !== undefined);
         const outcome = await page.evaluate(renderInPage, {styleJson: JSON.stringify(style), camera, attribution, timeoutMs: IDLE_TIMEOUT_MS});
-        return {png: await page.screenshot({type: 'png'}), notes: describeOutcome(outcome)};
+        return {png: await page.screenshot({type: 'png'}), notes: [...describeOutcome(outcome), ...describeMissingFonts(style.glyphs, failed)]};
     } finally {
         await page.close();
     }
@@ -116,6 +127,29 @@ function describeOutcome({version, errors, missingImages, idle}: PageOutcome): s
     }
     if (missingImages.length > 0) notes.push(`Images the style uses but the sprite lacks: ${missingImages.join(', ')}.`);
     return notes;
+}
+
+/**
+ * Names the font stacks whose glyphs did not load. The map reports none of them as an error: MapLibre GL JS warns in
+ * the console and draws their text with local fonts, so the image looks right for a font the glyph server lacks.
+ * debug_layers says the same per layer.
+ */
+function describeMissingFonts(glyphs: string | undefined, failed: FailedRequest[]): string[] {
+    if (!glyphs || !URL.canParse(glyphs)) return [];
+    // The glyphs URL as the browser requests it, with a pattern in place of each of its two tokens.
+    const requested = new URL(glyphs.replace('{fontstack}', 'FONTSTACK').replace('{range}', 'RANGE')).href
+        .replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+        .replace('FONTSTACK', '([^/?#]+)')
+        .replace('RANGE', '\\d+-\\d+');
+    const pattern = new RegExp(`^${requested}$`);
+    const fonts = new Map<string, string>();
+    for (const {url, reason} of failed) {
+        const fontstack = pattern.exec(url)?.[1];
+        if (fontstack && (!fonts.has(fontstack) || reason.startsWith('HTTP'))) fonts.set(fontstack, reason);
+    }
+    if (fonts.size === 0) return [];
+    const stacks = [...fonts].map(([fontstack, reason]) => `"${decodeURIComponent(fontstack)}" (${reason})`);
+    return [`Glyphs did not load for these font stacks, so their text is drawn with local fonts: ${stacks.join(', ')}.`];
 }
 
 /** Serves MapLibre GL JS to the headless browser from this package's own dependency. */

@@ -63,7 +63,7 @@ export function registerRenderStyle(server: McpServer, renderers: Renderer[]): v
         title: 'Render style',
         description: [
             'Renders a MapLibre style to a PNG image, so you can see what the style looks like, for example after changing it.',
-            'Also reports what the renderer noticed, such as style errors, failed requests and missing icons.',
+            'Also reports what the renderer noticed, such as style errors, failed requests, and fonts and icons that are missing.',
             'Pass the style as an object, a URL or a file path.',
             'Without center, zoom or bounds, the camera stored in the style is used.',
         ].join(' '),

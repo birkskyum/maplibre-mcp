@@ -34,6 +34,16 @@ describe('validate_style', () => {
         expect(textOf(result)).toContain('MapLibre does not resolve mapbox:// URLs (mapbox://styles/mapbox/streets-v12).');
     });
 
+    test('says where it looked for a style file that is not there', async () => {
+        const client = await connect('style');
+        const relative = await client.callTool({name: 'validate_style', arguments: {path: 'no-such-folder/style.json'}});
+        expect(relative.isError).toBe(true);
+        expect(textOf(relative)).toContain(`There is no file at ${path.resolve('no-such-folder/style.json')}. A relative path is read from ${process.cwd()}, the directory the server runs in.`);
+        const absolute = await client.callTool({name: 'validate_style', arguments: {path: path.join(tmpdir(), 'no-such-style.json')}});
+        expect(textOf(absolute)).toContain(`There is no file at ${path.join(tmpdir(), 'no-such-style.json')}.`);
+        expect(textOf(absolute)).not.toContain('A relative path');
+    });
+
     test('needs exactly one way to get the style', async () => {
         const client = await connect('style');
         const result = await client.callTool({name: 'validate_style', arguments: {}});

@@ -1,6 +1,7 @@
 import type {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {CallToolResult} from '@modelcontextprotocol/server';
 import {readFile, writeFile} from 'node:fs/promises';
+import path from 'node:path';
 import {z} from 'zod';
 
 /** Input fields of the tools that take a style. Exactly one of them has to be set. */
@@ -28,8 +29,19 @@ export async function loadStyle(input: StyleInput): Promise<StyleSpecification> 
     const given = [input.style, input.url, input.path].filter(value => value !== undefined);
     if (given.length !== 1) throw new Error('Pass exactly one of style, url and path.');
     if (input.url !== undefined) return fetchJson(input.url);
-    if (input.path !== undefined) return JSON.parse(await readFile(checkFileAccess(input.path), 'utf8'));
+    if (input.path !== undefined) return JSON.parse(await readStyleFile(checkFileAccess(input.path)));
     return input.style as StyleSpecification;
+}
+
+/** Reads a style file, and says where it looked when there is none, since a relative path depends on where the server runs. */
+async function readStyleFile(file: string): Promise<string> {
+    try {
+        return await readFile(file, 'utf8');
+    } catch (error) {
+        if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
+        const from = path.isAbsolute(file) ? '' : ` A relative path is read from ${process.cwd()}, the directory the server runs in.`;
+        throw new Error(`There is no file at ${path.resolve(file)}.${from}`, {cause: error});
+    }
 }
 
 /**

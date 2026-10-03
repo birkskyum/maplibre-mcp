@@ -10,10 +10,9 @@ export const styleToolset: Toolset = {
     name: 'style',
     description: 'Validate, format and migrate styles, look up the style spec, check sources, inspect tiles and debug layers',
     instructions: [
-        'Before you write a style, read what its tiles hold with inspect_tile, so that the layers and filters match the data.',
-        'Look up the layer types and properties you use with describe_style_spec instead of recalling them.',
-        'Asking it for layers lists every layer type, including ones that are newer than what you may remember.',
-        'Check a style with validate_style each time you change it. When a layer draws nothing, debug_layers says why.',
+        'inspect_tile shows the source layers, fields and values that real tiles hold.',
+        'describe_style_spec has every layer type and property of the current style spec, and lists the layer types when asked for layers.',
+        'debug_layers says why a layer draws nothing at a place.',
     ].join(' '),
     register(server) {
         registerValidateStyle(server);

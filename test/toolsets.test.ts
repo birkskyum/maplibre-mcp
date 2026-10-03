@@ -20,14 +20,14 @@ describe('createServer', () => {
     test('offers one render_style tool for all renderers', async () => {
         const client = await connect('gl-js,native');
         const {tools} = await client.listTools();
-        expect(tools.map(tool => tool.name)).toEqual(['describe_gl_js_api', 'show_map', 'render_style', 'compare_styles', 'compare_renderers']);
-        expect(tools[2].inputSchema.properties?.renderer).toMatchObject({enum: ['gl-js', 'native'], default: 'gl-js'});
+        expect(tools.map(tool => tool.name)).toEqual(['describe_gl_js_api', 'show_map', 'render_page', 'render_style', 'compare_styles', 'compare_renderers']);
+        expect(tools[3].inputSchema.properties?.renderer).toMatchObject({enum: ['gl-js', 'native'], default: 'gl-js'});
     });
 
     test('offers compare_renderers only with two renderers', async () => {
         const client = await connect('gl-js');
         const {tools} = await client.listTools();
-        expect(tools.map(tool => tool.name)).toEqual(['describe_gl_js_api', 'show_map', 'render_style', 'compare_styles']);
+        expect(tools.map(tool => tool.name)).toEqual(['describe_gl_js_api', 'show_map', 'render_page', 'render_style', 'compare_styles']);
     });
 
     test('tells the client how to work with the tools it has, and names no other tool', async () => {
@@ -40,9 +40,9 @@ describe('createServer', () => {
         }
     });
 
-    test('says how to render and how to load MapLibre GL JS only with the gl-js toolset', async () => {
+    test('says what the page renderer is for and how to load MapLibre GL JS only with the gl-js toolset', async () => {
         const withGlJs = (await connect('style,gl-js')).getInstructions();
-        expect(withGlJs).toContain('Render more than one view before you call it done');
+        expect(withGlJs).toContain('render_page draws a page of your own');
         expect(withGlJs).toMatch(/import \* as maplibregl from 'https:\/\/unpkg\.com\/maplibre-gl@6\.\d+\.\d+\/dist\/maplibre-gl\.mjs'/);
         const styleOnly = (await connect('style')).getInstructions();
         expect(styleOnly).toContain('inspect_tile');

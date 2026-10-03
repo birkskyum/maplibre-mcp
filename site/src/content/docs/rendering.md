@@ -11,6 +11,20 @@ The `gl-js` toolset draws with the MapLibre GL JS that is installed with the ser
 
 It waits until the map has loaded, for up to 30 seconds, and then reports the errors the map raised, the font stacks whose glyphs did not load, and the images the style uses but its sprite lacks. It reads PMTiles sources, with `pmtiles://` URLs, as well as tiles over HTTP.
 
+Over 3D terrain, a center and zoom are hard to guess for a view like "the Matterhorn from above Zermatt". `render_style` also takes `cameraPosition`, the longitude, latitude and altitude of the camera, and `lookAt`, the point on the ground it looks at. The result gives the center, zoom, bearing and pitch of that view, to store in the style.
+
+### Pages
+
+A style cannot hold everything a map shows. Plugins like contour lines, controls and the code of the page are outside it. `render_page` takes an HTML file or the URL of a page, loads it in the same headless browser and returns a screenshot, with the errors and warnings of the page and the requests that failed. An HTML file is served together with the files in its folder.
+
+When the page keeps its map in `window.map`, the screenshot waits until that map has drawn everything, the result has its camera, and `script` can use the map before the screenshot:
+
+```json
+{"path": "index.html", "script": "map.jumpTo({center: [7.66, 45.98], zoom: 12, pitch: 60})"}
+```
+
+A server that other machines can reach does not load pages.
+
 ## MapLibre Native
 
 The `native` toolset draws with MapLibre Native, the engine of the MapLibre iOS and Android SDKs, through `@maplibre/maplibre-gl-native`. That package has builds for macOS, Windows and Ubuntu 24.04, and has to be installed next to the server:

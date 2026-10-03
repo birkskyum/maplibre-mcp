@@ -15,4 +15,11 @@ describe('disableFileAccess', () => {
         expect(textOf(result)).toContain('This server does not read or write files, since other machines can reach it.');
         expect(await readFile(file, 'utf8')).toBe('{"layers": [], "sources": {}, "version": 8}');
     });
+
+    test('loads no pages', async () => {
+        disableFileAccess();
+        const client = await connect('gl-js');
+        const result = await client.callTool({name: 'render_page', arguments: {url: 'http://localhost:1/'}});
+        expect(textOf(result)).toContain('This server does not load pages, since other machines can reach it.');
+    });
 });

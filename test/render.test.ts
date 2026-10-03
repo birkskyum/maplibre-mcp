@@ -59,6 +59,26 @@ describe('render_style', () => {
         }
     });
 
+    test('places the camera from where it is and what it looks at', async () => {
+        const client = await connect('gl-js');
+        const high = textOf(await client.callTool({name: 'render_style', arguments: {style: BLUE_STYLE, cameraPosition: [0, -0.01, 1000], lookAt: [0, 0], width: 120, height: 80}}));
+        const [, zoom, bearing, pitch] = /Camera: center \[0, 0\], zoom ([\d.]+), bearing (-?[\d.]+), pitch ([\d.]+)\./.exec(high) ?? [];
+        expect(Number(zoom)).toBeGreaterThan(10);
+        expect(Number(bearing)).toBeCloseTo(0, 1);
+        expect(Number(pitch)).toBeCloseTo(48.07, 0);
+        expect(high).not.toContain('maxPitch');
+        const low = textOf(await client.callTool({name: 'render_style', arguments: {style: BLUE_STYLE, cameraPosition: [0, -0.01, 100], lookAt: [0, 0], width: 120, height: 80}}));
+        expect(low).toContain('A map shows this view only with maxPitch 85 or more, since its default is 60.');
+    });
+
+    test('needs a camera position and a point to look at together, and a renderer that can place them', async () => {
+        const client = await connect('gl-js,native');
+        const alone = await client.callTool({name: 'render_style', arguments: {style: BLUE_STYLE, lookAt: [0, 0]}});
+        expect(textOf(alone)).toContain('Pass cameraPosition and lookAt together.');
+        const native = await client.callTool({name: 'render_style', arguments: {style: BLUE_STYLE, renderer: 'native', cameraPosition: [0, -0.01, 1000], lookAt: [0, 0]}});
+        expect(textOf(native)).toContain('The native renderer cannot place the camera from cameraPosition and lookAt.');
+    });
+
     test('points to Native\'s missing features', async () => {
         const client = await connect('native');
         const result = await client.callTool({name: 'render_style', arguments: {style: {...BLUE_STYLE, sky: {'sky-color': '#88c6fc'}}, width: 120, height: 80}});

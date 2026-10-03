@@ -11,11 +11,21 @@ export type Camera = {
     pitch: number;
 };
 
+/** A camera given as where it is and what it looks at, which a renderer turns into a center, zoom, bearing and pitch. */
+export type LookAt = {
+    /** Longitude, latitude and altitude in metres of the camera. */
+    from: [number, number, number];
+    /** Longitude and latitude of the point on the ground that the camera looks at. */
+    to: [number, number];
+};
+
 export type RenderRequest = {
     style: StyleSpecification;
     /** The URL the style was loaded from, for renderers that draw the styles a server hosts. */
     styleUrl?: string;
     camera: Camera;
+    /** Replaces the camera, for a renderer that can place one over terrain. */
+    lookAt?: LookAt;
     width: number;
     height: number;
     /** Whether to draw the map's attribution, which comparisons between renderers leave out since only GL JS draws it. */
@@ -24,6 +34,8 @@ export type RenderRequest = {
 
 export type RenderResult = {
     png: Uint8Array;
+    /** The camera the renderer ended up with, when it placed the camera itself. */
+    camera?: Camera;
     /** Lines for the model about the render, such as the renderer version and the errors the map reported. */
     notes: string[];
 };
@@ -31,6 +43,8 @@ export type RenderResult = {
 /** A MapLibre renderer that draws a style to a PNG. */
 export type Renderer = {
     name: string;
+    /** Whether it can place the camera from a position and a point to look at, which takes the height of the terrain. */
+    looksAt?: boolean;
     render: (request: RenderRequest) => Promise<RenderResult>;
 };
 
@@ -52,6 +66,14 @@ export const CAMERA_INPUT = {
         .describe('[west, south, east, north] to fit the map to, instead of center and zoom.'),
 };
 
+/** Input fields that place the camera in space, for a view over terrain that a center and zoom are hard to guess for. */
+const LOOK_AT_INPUT = {
+    cameraPosition: z.array(z.number()).length(3).optional()
+        .describe('[longitude, latitude, altitude in metres] of the camera, to place it in space instead of with center, zoom, bearing and pitch. Needs lookAt.'),
+    lookAt: z.array(z.number()).length(2).optional()
+        .describe('[longitude, latitude] of the point on the ground that the camera at cameraPosition looks at, like a summit or a village.'),
+};
+
 const FIT_PADDING = 32;
 const FIT_MAX_ZOOM = 18;
 const TILE_SIZE = 512;
@@ -64,14 +86,15 @@ export function registerRenderStyle(server: McpServer, renderers: Renderer[]): v
         description: [
             'Renders a MapLibre style to a PNG image, so you can see what the style looks like, for example after changing it.',
             'Also reports what the renderer noticed, such as style errors, failed requests, and fonts and icons that are missing.',
-            'Render more than one view of a style before you call it done, since problems often show only at another zoom or place.',
             'Pass the style as an object, a URL or a file path.',
             'Without center, zoom or bounds, the camera stored in the style is used.',
+            'For a view over 3D terrain, cameraPosition and lookAt place the camera in space, and the result gives the center, zoom, bearing and pitch of that view to store in the style.',
         ].join(' '),
         inputSchema: z.object({
             ...STYLE_INPUT,
             renderer: z.enum(names).default(names[0]).describe('The MapLibre renderer to draw with.'),
             ...CAMERA_INPUT,
+            ...LOOK_AT_INPUT,
             width: z.number().int().min(64).max(2048).default(800),
             height: z.number().int().min(64).max(2048).default(600),
         }),
@@ -79,12 +102,14 @@ export function registerRenderStyle(server: McpServer, renderers: Renderer[]): v
     }, async input => {
         const style = await loadStyle(input);
         const camera = resolveCamera(style, input, input.width, input.height);
-        const {png, notes} = await findRenderer(renderers, input.renderer)
-            .render({style, styleUrl: input.url, camera, width: input.width, height: input.height});
+        const renderer = findRenderer(renderers, input.renderer);
+        const lookAt = resolveLookAt(input, renderer);
+        const {png, notes, camera: placed} = await renderer
+            .render({style, styleUrl: input.url, camera, lookAt, width: input.width, height: input.height});
         return {
             content: [
                 {type: 'image', data: Buffer.from(png).toString('base64'), mimeType: 'image/png'},
-                {type: 'text', text: [describeCamera(camera), ...notes].join('\n')},
+                {type: 'text', text: [describeCamera(placed ?? camera), ...notes].join('\n')},
             ],
         };
     });
@@ -106,7 +131,19 @@ export function resolveCamera(style: StyleSpecification, input: CameraInput, wid
 
 export function describeCamera({center, zoom, bearing, pitch}: Camera): string {
     const [lng, lat] = center.map(value => Number(value.toFixed(5)));
-    return `Camera: center [${lng}, ${lat}], zoom ${Number(zoom.toFixed(2))}, bearing ${bearing}, pitch ${pitch}.`;
+    const round = (value: number): number => Number(value.toFixed(2));
+    return `Camera: center [${lng}, ${lat}], zoom ${round(zoom)}, bearing ${round(bearing)}, pitch ${round(pitch)}.`;
+}
+
+/** Returns the camera position and the point it looks at from the tool input, which have to come together. */
+function resolveLookAt(input: {cameraPosition?: number[]; lookAt?: number[]}, renderer: Renderer): LookAt | undefined {
+    if (!input.cameraPosition && !input.lookAt) return undefined;
+    if (!input.cameraPosition || !input.lookAt) throw new Error('Pass cameraPosition and lookAt together.');
+    if (!renderer.looksAt) {
+        throw new Error(`The ${renderer.name} renderer cannot place the camera from cameraPosition and lookAt. Pass center, zoom, bearing and pitch instead.`);
+    }
+    const [lng, lat, altitude] = input.cameraPosition;
+    return {from: [lng, lat, altitude], to: [input.lookAt[0], input.lookAt[1]]};
 }
 
 /** Returns the center and zoom that fit Web Mercator bounds into a viewport, the same way for every renderer. */

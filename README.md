@@ -64,7 +64,8 @@ The images go to `map.png`, `compare.png` and `renderers.png`, or to `--out`. `n
 - `inspect_tile` reads the vector tile at a place and lists each source layer with its geometry types, the values of its fields and how often they occur, and a few example features, plus the zoom range of the source and the source layers the tile lacks. The source can be a source in a style, a TileJSON URL like a Martin source, a PMTiles archive or a tile URL, with MVT or MLT tiles.
 - `debug_layers` says for each layer of a style whether it draws at a place and zoom, and if not, why, like a missing source layer, a filter that matches nothing (next to the values the data has), a fill layer without polygons, paint that comes out as 0 or transparent, or icons missing from the sprite. It also notes text that falls back to local fonts, since the glyph server lacks its font stack.
 - `format_style` and `migrate_style` do what `gl-style-format` and `gl-style-migrate` do. Given a file, they rewrite it.
-- `render_style` renders a style to a PNG, and reports map errors and missing icons. It takes a center, zoom, bearing and pitch, or bounds to fit.
+- `render_style` renders a style to a PNG, and reports map errors, missing fonts and missing icons. It takes a center, zoom, bearing and pitch, bounds to fit, or a camera position and a point to look at over 3D terrain.
+- `render_page` renders a web page with a map, for what a style cannot hold, like plugins, controls and the page's code. It reports the page's errors and failed requests, and can run a script in the page first.
 - `compare_styles` renders two versions of a style at the same camera, and returns one image with the style before, after, and their differences in red.
 - `compare_renderers` does the same for one style in two renderers, for example to check that a style looks the same on the web and on mobile.
 - `show_map` shows the user an interactive map with GeoJSON layers and markers on an [OpenFreeMap](https://openfreemap.org) basemap, in clients that support MCP Apps.
@@ -87,7 +88,7 @@ npx -y maplibre-mcp --toolsets style,gl-js,martin
 | Toolset | What it adds |
 | --- | --- |
 | `style` | `validate_style`, `describe_style_spec`, `describe_sources`, `inspect_tile`, `debug_layers`, `format_style`, `migrate_style` |
-| `gl-js` | Rendering with MapLibre GL JS, `describe_gl_js_api` and `show_map` |
+| `gl-js` | Rendering with MapLibre GL JS, `render_page`, `describe_gl_js_api` and `show_map` |
 | `native` | Rendering with MapLibre Native |
 | `martin` | Rendering with a Martin server, and `martin_list_sources` |
 | `ecosystem` | `search_ecosystem` and `find_basemaps`, which read the catalog of [Make with MapLibre](https://makewithmaplibre.com) |

@@ -7,8 +7,7 @@ export const ecosystemToolset: Toolset = {
     name: 'ecosystem',
     description: 'Search Make with MapLibre for SDKs, plugins, services, products and basemaps',
     instructions: [
-        'A style alone cannot do everything. Plugins and services add things like contour lines, drawing, routing and geocoding,',
-        'so look for them with search_ecosystem before you say that something is not possible.',
+        'search_ecosystem finds the plugins and services that add what MapLibre itself does not have, like contour lines, drawing, routing and geocoding.',
         'find_basemaps lists basemap styles, tiles and elevation data, and says which need an API key.',
     ].join(' '),
     register(server) {

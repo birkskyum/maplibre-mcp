@@ -3,7 +3,7 @@ import {createServer} from 'node:http';
 import {createRequire} from 'node:module';
 import path from 'node:path';
 import {type Browser, chromium} from 'playwright-core';
-import type {Camera, Renderer, RenderRequest, RenderResult} from '../../render-style.js';
+import type {Camera, LookAt, Renderer, RenderRequest, RenderResult} from '../../render-style.js';
 
 declare global {
     interface Window {
@@ -16,12 +16,15 @@ type PageInput = {
     /** The style as JSON text, which keeps Playwright from walking the style's deep type. */
     styleJson: string;
     camera: Camera;
+    lookAt?: LookAt;
     attribution: boolean;
     timeoutMs: number;
 };
 
 type PageOutcome = {
     version: string;
+    /** The camera the page placed for a lookAt. */
+    camera?: Camera;
     errors: string[];
     missingImages: string[];
     idle: boolean;
@@ -43,6 +46,8 @@ type FailedRequest = {
 };
 
 const IDLE_TIMEOUT_MS = 30_000;
+/** The pitch that a GL JS map allows unless its maxPitch says otherwise. */
+const DEFAULT_MAX_PITCH = 60;
 const MAX_ERRORS = 20;
 
 /** Lets Chrome fall back to software WebGL on machines without a GPU. */
@@ -68,12 +73,12 @@ const PAGE = `<!doctype html>
 <body><div id="map"></div></body>
 </html>`;
 
-export const glJsRenderer: Renderer = {name: 'gl-js', render};
+export const glJsRenderer: Renderer = {name: 'gl-js', looksAt: true, render};
 
 let origin: Promise<string> | undefined;
 let browser: Promise<Browser> | undefined;
 
-async function render({style, camera, width, height, attribution = true}: RenderRequest): Promise<RenderResult> {
+async function render({style, camera, lookAt, width, height, attribution = true}: RenderRequest): Promise<RenderResult> {
     origin ??= serveAssets();
     const [pageOrigin, instance] = await Promise.all([origin, getBrowser()]);
     const page = await instance.newPage({viewport: {width, height}});
@@ -85,15 +90,19 @@ async function render({style, camera, width, height, attribution = true}: Render
     try {
         await page.goto(pageOrigin);
         await page.waitForFunction(() => window.maplibregl !== undefined);
-        const outcome = await page.evaluate(renderInPage, {styleJson: JSON.stringify(style), camera, attribution, timeoutMs: IDLE_TIMEOUT_MS});
-        return {png: await page.screenshot({type: 'png'}), notes: [...describeOutcome(outcome), ...describeMissingFonts(style.glyphs, failed)]};
+        const outcome = await page.evaluate(renderInPage, {styleJson: JSON.stringify(style), camera, lookAt, attribution, timeoutMs: IDLE_TIMEOUT_MS});
+        return {
+            png: await page.screenshot({type: 'png'}),
+            camera: outcome.camera,
+            notes: [...describeOutcome(outcome), ...describeMissingFonts(style.glyphs, failed)],
+        };
     } finally {
         await page.close();
     }
 }
 
 /** Draws the style in the page and waits until the map is idle. Runs in the browser, so it can only use its arguments. */
-async function renderInPage({styleJson, camera, attribution, timeoutMs}: PageInput): Promise<PageOutcome> {
+async function renderInPage({styleJson, camera, lookAt, attribution, timeoutMs}: PageInput): Promise<PageOutcome> {
     const {maplibregl, pmtiles} = window;
     if (!maplibregl) throw new Error('MapLibre GL JS did not load in the page.');
     if (pmtiles) maplibregl.addProtocol('pmtiles', new pmtiles.Protocol().tile);
@@ -104,22 +113,35 @@ async function renderInPage({styleJson, camera, attribution, timeoutMs}: PageInp
         container: 'map',
         style: JSON.parse(styleJson),
         ...camera,
-        maxPitch: 85,
+        maxPitch: lookAt ? 180 : 85,
         fadeDuration: 0,
         attributionControl: attribution ? {compact: true} : false,
     });
     map.on('error', event => errors.add(event.error.message));
     map.on('styleimagemissing', event => missingImages.add(event.id));
 
-    const idle = await new Promise<boolean>(resolve => {
+    const untilIdle = (): Promise<boolean> => new Promise(resolve => {
         map.once('idle', () => resolve(true));
         setTimeout(() => resolve(false), timeoutMs);
     });
-    return {version: maplibregl.getVersion(), errors: [...errors], missingImages: [...missingImages], idle};
+    let idle = await untilIdle();
+    if (!lookAt) return {version: maplibregl.getVersion(), errors: [...errors], missingImages: [...missingImages], idle};
+
+    // The point looked at lies on the terrain, whose height is only known once its tiles are there, so the camera is placed again as they load.
+    const [lng, lat, altitude] = lookAt.from;
+    for (let pass = 0; pass < 3 && idle; pass++) {
+        map.jumpTo(map.calculateCameraOptionsFromTo(new maplibregl.LngLat(lng, lat), altitude, new maplibregl.LngLat(lookAt.to[0], lookAt.to[1])));
+        idle = await untilIdle();
+    }
+    const placed: Camera = {center: map.getCenter().toArray(), zoom: map.getZoom(), bearing: map.getBearing(), pitch: map.getPitch()};
+    return {version: maplibregl.getVersion(), camera: placed, errors: [...errors], missingImages: [...missingImages], idle};
 }
 
-function describeOutcome({version, errors, missingImages, idle}: PageOutcome): string[] {
+function describeOutcome({version, camera, errors, missingImages, idle}: PageOutcome): string[] {
     const notes = [`Rendered with MapLibre GL JS ${version}.`];
+    if (camera && camera.pitch > DEFAULT_MAX_PITCH) {
+        notes.push(`A map shows this view only with maxPitch ${Math.ceil(camera.pitch)} or more, since its default is ${DEFAULT_MAX_PITCH}.`);
+    }
     if (!idle) notes.push(`The map did not finish loading within ${IDLE_TIMEOUT_MS / 1000} seconds, so the image may be incomplete.`);
     if (errors.length > 0) {
         notes.push('Errors from the map:', ...errors.slice(0, MAX_ERRORS).map(error => `  ${error}`));
@@ -176,7 +198,7 @@ function serveAssets(): Promise<string> {
     });
 }
 
-function getBrowser(): Promise<Browser> {
+export function getBrowser(): Promise<Browser> {
     browser ??= launchBrowser().catch(error => {
         browser = undefined;
         throw error;

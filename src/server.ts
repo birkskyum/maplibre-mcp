@@ -4,7 +4,9 @@ import {registerCompareRenderers, registerCompareStyles} from './compare-styles.
 import {registerRenderStyle} from './render-style.js';
 import type {Toolset} from './toolsets.js';
 
-/** How to work with `render_style`, which the server has when a toolset brings a renderer. */
+const INTRODUCTION = 'maplibre-mcp has what you would otherwise build yourself to work on MapLibre maps.';
+
+/** What `render_style` is for, which the server has when a toolset brings a renderer. */
 const RENDER_INSTRUCTIONS = [
     'A style that validates is not finished. Render it with render_style and look at the image as its user will.',
     'Is what they asked for the first thing the eye lands on? Can every label be read, and does it stand clear of the other labels and of what it names?',
@@ -17,7 +19,7 @@ const RENDER_INSTRUCTIONS = [
 export function createServer(toolsets: Toolset[]): McpServer {
     const renderers = toolsets.flatMap(toolset => toolset.renderer ?? []);
     const instructions = [
-        'These tools check MapLibre work, so use them instead of assuming that it works.',
+        INTRODUCTION,
         ...toolsets.flatMap(toolset => toolset.instructions ?? []),
         ...(renderers.length > 0 ? [RENDER_INSTRUCTIONS] : []),
     ].join('\n\n');

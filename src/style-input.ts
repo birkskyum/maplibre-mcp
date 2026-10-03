@@ -39,9 +39,14 @@ async function readStyleFile(file: string): Promise<string> {
         return await readFile(file, 'utf8');
     } catch (error) {
         if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
-        const from = path.isAbsolute(file) ? '' : ` A relative path is read from ${process.cwd()}, the directory the server runs in.`;
-        throw new Error(`There is no file at ${path.resolve(file)}.${from}`, {cause: error});
+        throw new Error(missingFile(file), {cause: error});
     }
+}
+
+/** Says where a file was looked for, since a relative path depends on where the server runs. */
+export function missingFile(file: string): string {
+    const from = path.isAbsolute(file) ? '' : ` A relative path is read from ${process.cwd()}, the directory the server runs in.`;
+    return `There is no file at ${path.resolve(file)}.${from}`;
 }
 
 /**
@@ -52,6 +57,11 @@ export async function returnStyle(input: StyleInput, json: string, action: strin
     if (input.path === undefined) return {content: [{type: 'text', text: json}]};
     await writeFile(checkFileAccess(input.path), json);
     return {content: [{type: 'text', text: `${action} ${input.path}.`}]};
+}
+
+/** Whether the tools may read files and load pages, which a server that other machines can reach does not do. */
+export function hasFileAccess(): boolean {
+    return fileAccess;
 }
 
 export function checkFileAccess(path: string): string {

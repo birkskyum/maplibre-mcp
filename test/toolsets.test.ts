@@ -30,6 +30,26 @@ describe('createServer', () => {
         expect(tools.map(tool => tool.name)).toEqual(['describe_gl_js_api', 'show_map', 'render_style', 'compare_styles']);
     });
 
+    test('tells the client how to work with the tools it has, and names no other tool', async () => {
+        for (const toolsets of ['style', 'style,gl-js,ecosystem', 'all']) {
+            const client = await connect(toolsets);
+            const {tools} = await client.listTools();
+            const named = client.getInstructions()?.match(/\b[a-z]+(_[a-z]+)+\b/g) ?? [];
+            expect(named.length).toBeGreaterThan(0);
+            expect(tools.map(tool => tool.name)).toEqual(expect.arrayContaining(named));
+        }
+    });
+
+    test('says how to render and how to load MapLibre GL JS only with the gl-js toolset', async () => {
+        const withGlJs = (await connect('style,gl-js')).getInstructions();
+        expect(withGlJs).toContain('Render more than one view before you call it done');
+        expect(withGlJs).toMatch(/import \* as maplibregl from 'https:\/\/unpkg\.com\/maplibre-gl@6\.\d+\.\d+\/dist\/maplibre-gl\.mjs'/);
+        const styleOnly = (await connect('style')).getInstructions();
+        expect(styleOnly).toContain('inspect_tile');
+        expect(styleOnly).not.toContain('render_style');
+        expect(styleOnly).not.toContain('maplibre-gl.mjs');
+    });
+
     test('offers no render_style without a renderer', async () => {
         const client = await connect('style');
         const {tools} = await client.listTools();

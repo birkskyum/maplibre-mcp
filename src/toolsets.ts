@@ -11,6 +11,8 @@ export type Toolset = {
     name: string;
     description: string;
     register?: (server: McpServer) => void;
+    /** How to work with the toolset's tools, as part of the instructions the server gives its client. */
+    instructions?: string;
     /** A renderer that the shared `render_style` tool offers. */
     renderer?: Renderer;
 };

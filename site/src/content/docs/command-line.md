@@ -15,7 +15,7 @@ A style is a file or a URL. The commands that render write the image to a file, 
 
 | Command | What it does |
 | --- | --- |
-| `render <style>` | Renders the style to `map.png`, and reports map errors and missing icons |
+| `render <style>` | Renders the style to `map.png`, and reports map errors, fonts that did not load and missing icons |
 | `compare <before> <after>` | Renders two versions of a style to `compare.png`, with the pixels that differ in red |
 | `compare-renderers <style>` | Renders the style with two renderers to `renderers.png`, with the pixels that differ in red |
 | `describe-sources <style>` | Lists the source layers and fields of each source, and the layers that use ones that are not there |

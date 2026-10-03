@@ -9,7 +9,7 @@ description: The three renderers, what each one needs, and how the camera and co
 
 The `gl-js` toolset draws with the MapLibre GL JS that is installed with the server, in a headless browser. It uses Google Chrome, and without Chrome the Chromium that Playwright installs. On a machine without a GPU, Chrome falls back to software WebGL, which is slower.
 
-It waits until the map has loaded, for up to 30 seconds, and then reports the errors the map raised and the images the style uses but its sprite lacks. It reads PMTiles sources, with `pmtiles://` URLs, as well as tiles over HTTP.
+It waits until the map has loaded, for up to 30 seconds, and then reports the errors the map raised, the font stacks whose glyphs did not load, and the images the style uses but its sprite lacks. It reads PMTiles sources, with `pmtiles://` URLs, as well as tiles over HTTP.
 
 ## MapLibre Native
 

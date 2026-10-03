@@ -8,12 +8,12 @@
     "source": "github"
   },
   "websiteUrl": "https://birkskyum.github.io/maplibre-mcp/",
-  "version": "0.7.1",
+  "version": "0.8.0",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "maplibre-mcp",
-      "version": "0.7.1",
+      "version": "0.8.0",
       "transport": {
         "type": "stdio"
       },

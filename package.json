@@ -1,7 +1,7 @@
 {
   "name": "maplibre-mcp",
   "mcpName": "io.github.birkskyum/maplibre-mcp",
-  "version": "0.7.1",
+  "version": "0.8.0",
   "description": "An MCP server that lets AI agents check, render and show MapLibre styles",
   "license": "MIT",
   "author": "Birk Skyum (https://github.com/birkskyum)",

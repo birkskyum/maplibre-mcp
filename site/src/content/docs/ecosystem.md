@@ -23,11 +23,19 @@ The catalog has a schema version. This server reads version 1, and asks you to u
 | Parameter | What it does |
 | --- | --- |
 | `query` | Words that every result has to contain, in its name, description, platforms, frameworks, languages or maker. Leave it out to list the most prominent entries. |
-| `kind` | `sdk`, `plugin`, `routing`, `geocoding`, `styling`, `tiling`, `ai`, `service`, `product` or `consultant`. `ai` is MCP servers and agent skills for MapLibre. `routing`, `geocoding`, `styling` and `tiling` include the hosted services of that kind. |
+| `kind` | `sdk`, `plugin`, `routing`, `geocoding`, `styling`, `tiling`, `ai`, `service`, `product` or `consultant`. `ai` is MCP servers and agent skills for MapLibre. `plugin` includes the routing and geocoding controls for GL JS, like MapLibre GL Directions. `routing`, `geocoding`, `styling` and `tiling` include the hosted services of that kind. |
 | `platform` | `Web`, `iOS`, `Android`, `Desktop` or `Server`. Hosted services and consultancies have no platform, and are kept. |
 | `limit` | The most results to return, 10 by default. |
 
-Results whose name has the words come first, then the rest in the order of prominence the directory gives them. Each result has its kind and the section of the directory it is listed in, what it runs on, its links, its live demo when it has one, and its page on Make with MapLibre:
+Results whose name has the words come first, then libraries and hosted services, then products and consultancies, each in the order of prominence the directory gives them. Products outnumber the libraries and mention the same words, so without that order a search for "draw" would mix them in among the drawing plugins. When the results are of several kinds and no `kind` is given, the first line counts them, so the agent knows how to narrow the search:
+
+```text
+30 entries match "draw" (20 products, 8 plugins, 1 SDK and 1 routing library), the first 10 here:
+```
+
+When a `kind` leaves nothing, the result says what the same words find in other kinds. Basemaps aren't among the results, since `find_basemaps` lists them with what a map needs to use them, so when basemaps match the words too, the result says how many and points to `find_basemaps`.
+
+Each result has its kind and the section of the directory it is listed in, what it runs on, its links, its live demo when it has one, and its page on Make with MapLibre:
 
 ```text
 maplibre-gl-terradraw (plugin, drawing): Drawing and measuring toolbar on Terra Draw

@@ -17,6 +17,20 @@ type Kind = (typeof KINDS)[number];
 
 const PLATFORMS = ['Web', 'iOS', 'Android', 'Desktop', 'Server'] as const;
 
+/** What one entry and several entries of each kind are called, to count the results by kind. */
+const KIND_NAMES: Record<Kind, [string, string]> = {
+    sdk: ['SDK', 'SDKs'],
+    plugin: ['plugin', 'plugins'],
+    routing: ['routing library', 'routing libraries'],
+    geocoding: ['geocoding library', 'geocoding libraries'],
+    styling: ['styling tool', 'styling tools'],
+    tiling: ['tiling tool', 'tiling tools'],
+    ai: ['AI tool', 'AI tools'],
+    service: ['hosted service', 'hosted services'],
+    product: ['product', 'products'],
+    consultant: ['consultancy', 'consultancies'],
+};
+
 const SERVICE_LABEL: Record<ServiceKind, string> = {
     'routing-api': 'routing API',
     'geocoding-api': 'geocoding API',
@@ -53,7 +67,7 @@ function registerSearchEcosystem(server: McpServer): void {
         ].join(' '),
         inputSchema: z.object({
             query: z.string().optional().describe('Words that each result has to contain, like "react", "draw" or "routing". Leave it out to list the most prominent entries.'),
-            kind: z.enum(KINDS).optional().describe('Only entries of this kind. ai is MCP servers and agent skills for MapLibre. routing, geocoding, styling and tiling include the hosted services of that kind, and service lists all of them.'),
+            kind: z.enum(KINDS).optional().describe('Only entries of this kind. ai is MCP servers and agent skills for MapLibre. plugin includes the routing and geocoding controls for MapLibre GL JS. routing, geocoding, styling and tiling include the hosted services of that kind, and service lists all of them.'),
             platform: z.enum(PLATFORMS).optional().describe('Only entries that run on this platform. Hosted services and consultancies have no platform and are kept.'),
             limit: z.number().int().min(1).max(50).default(10).describe('The most results to return.'),
         }),
@@ -61,18 +75,30 @@ function registerSearchEcosystem(server: McpServer): void {
     }, async ({query, kind, platform, limit}) => {
         const catalog = await loadCatalog();
         const terms = (query ?? '').toLowerCase().split(/\s+/).filter(Boolean);
-        const matches = entries(catalog)
-            .filter(entry => !kind || entry.kinds.includes(kind))
+        const found = entries(catalog)
             .filter(entry => !platform || entry.platforms.length === 0 || entry.platforms.includes(platform))
             .filter(entry => terms.every(term => entry.text.includes(term)))
-            .sort((a, b) => score(b, terms) - score(a, terms) || b.weight - a.weight || a.name.localeCompare(b.name));
+            .sort((a, b) => score(b, terms) - score(a, terms) || tier(a) - tier(b) || b.weight - a.weight || a.name.localeCompare(b.name));
+        const matches = found.filter(entry => !kind || entry.kinds.includes(kind));
         const shown = matches.slice(0, limit);
-        const lines = shown.length === 0 ?
-            [`Nothing in Make with MapLibre matches${describeSearch(query, kind, platform)}. Try fewer or broader words, or another kind.`] :
-            [
-                `${matches.length} ${matches.length === 1 ? 'entry matches' : 'entries match'}${describeSearch(query, kind, platform)}${matches.length > shown.length ? `, the first ${shown.length} here` : ''}:`,
+        const lines: string[] = [];
+        if (shown.length > 0) {
+            const kinds = kind || new Set(matches.map(entry => entry.kinds[0])).size < 2 ? '' : ` (${describeKinds(matches)})`;
+            lines.push(
+                `${matches.length} ${matches.length === 1 ? 'entry matches' : 'entries match'}${describeSearch(query, kind, platform)}${kinds}${matches.length > shown.length ? `, the first ${shown.length} here` : ''}:`,
                 ...shown.flatMap(entry => ['', ...entry.lines]),
-            ];
+            );
+        } else if (found.length > 0) {
+            lines.push(`Nothing in Make with MapLibre matches${describeSearch(query, kind, platform)}. Without the kind, ${describeKinds(found)} ${found.length === 1 ? 'matches' : 'match'}.`);
+        } else {
+            lines.push(`Nothing in Make with MapLibre matches${describeSearch(query, kind, platform)}. Try fewer or broader words, or another kind.`);
+        }
+        const basemaps = terms.length > 0 && (!kind || kind === 'styling' || kind === 'tiling') ?
+            catalog.basemaps.filter(basemap => basemapMatches(basemap, terms)).length :
+            0;
+        if (basemaps > 0) {
+            lines.push('', `${basemaps} ${basemaps === 1 ? 'basemap matches' : 'basemaps match'} too. find_basemaps lists ${basemaps === 1 ? 'it with its style or tile URL' : 'them with their style or tile URLs'}.`);
+        }
         lines.push('', sourceLine(catalog));
         return {content: [{type: 'text', text: lines.join('\n')}]};
     });
@@ -97,7 +123,7 @@ function registerFindBasemaps(server: McpServer): void {
         const terms = (query ?? '').toLowerCase().split(/\s+/).filter(Boolean);
         const basemaps = catalog.basemaps
             .filter(basemap => free === undefined || basemap.free === free)
-            .filter(basemap => terms.every(term => `${basemap.name} ${basemap.provider} ${basemap.description}`.toLowerCase().includes(term)))
+            .filter(basemap => basemapMatches(basemap, terms))
             .sort((a, b) => Number(b.free) - Number(a.free) || a.provider.localeCompare(b.provider) || a.name.localeCompare(b.name));
         const lines = basemaps.length === 0 ?
             ['No basemap in Make with MapLibre matches. Try fewer words, or leave out free.'] :
@@ -160,7 +186,7 @@ function libraryEntry(library: Library, makerNames: Map<string, string>): Entry 
         library.npm ? `npm ${library.npm}` : undefined,
     ].filter(Boolean);
     return {
-        kinds: [library.kind],
+        kinds: addsGlJsControl(library) ? [library.kind, 'plugin'] : [library.kind],
         name: library.name,
         weight: library.weight ?? 0,
         platforms: library.platforms,
@@ -218,6 +244,34 @@ function sourceLine(catalog: Catalog): string {
     if (!catalog.attribution) return `From ${new URL('catalog.json', catalog.site).href}, generated ${generated}.`;
     const license = catalog.license?.startsWith('CC-') ? catalog.license.replaceAll('-', ' ') : catalog.license;
     return `Source: ${catalog.attribution}${license ? `, ${license}` : ''}, generated ${generated}. Credit it and link to ${catalog.attributionUrl ?? catalog.site} when you pass this on.`;
+}
+
+/** Routing and geocoding libraries that add a control to a MapLibre GL JS map, like MapLibre GL Directions, are GL JS plugins too. */
+function addsGlJsControl(library: Library): boolean {
+    return (library.kind === 'routing' || library.kind === 'geocoding') &&
+        library.platforms.includes('Web') &&
+        library.renderers.includes('MapLibre GL JS') &&
+        /\b(plugin|control)\b/i.test(`${library.tagline ?? ''} ${library.description}`);
+}
+
+function basemapMatches(basemap: Basemap, terms: string[]): boolean {
+    const text = `${basemap.name} ${basemap.provider} ${basemap.description}`.toLowerCase();
+    return terms.every(term => text.includes(term));
+}
+
+/** Libraries and hosted services come before products and consultancies, which outnumber them and mention the same words. */
+function tier(entry: Entry): number {
+    return entry.kinds[0] === 'product' || entry.kinds[0] === 'consultant' ? 1 : 0;
+}
+
+/** Counts entries by their kind, the largest group first, like "25 products, 4 plugins and 1 routing library". */
+function describeKinds(entries: Entry[]): string {
+    const counts = new Map<Kind, number>();
+    for (const entry of entries) counts.set(entry.kinds[0], (counts.get(entry.kinds[0]) ?? 0) + 1);
+    const parts = [...counts]
+        .sort(([kindA, countA], [kindB, countB]) => countB - countA || KINDS.indexOf(kindA) - KINDS.indexOf(kindB))
+        .map(([kind, count]) => `${count} ${KIND_NAMES[kind][count === 1 ? 0 : 1]}`);
+    return parts.length === 1 ? parts[0] : `${parts.slice(0, -1).join(', ')} and ${parts.at(-1)}`;
 }
 
 function searchText(...parts: Array<string | undefined>): string {

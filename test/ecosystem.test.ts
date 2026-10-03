@@ -44,6 +44,16 @@ const catalog = {
             description: 'A routing engine for OpenStreetMap data.', link: 'https://github.com/valhalla/valhalla',
             url: 'https://makewithmaplibre.com/routing/valhalla/', platforms: ['Server'], languages: ['C++'], frameworks: [], renderers: [],
         },
+        {
+            slug: 'maplibre-gl-directions', name: 'MapLibre GL Directions', kind: 'routing', tagline: 'Routing plugin for web maps',
+            description: 'A directions control for MapLibre GL JS that adds routing to web maps.', link: 'https://github.com/maplibre/maplibre-gl-directions',
+            url: 'https://makewithmaplibre.com/routing/maplibre-gl-directions/', platforms: ['Web'], languages: ['TypeScript'], frameworks: [], renderers: ['MapLibre GL JS'],
+        },
+        {
+            slug: 'vue-maplibre', name: 'Vue MapLibre', kind: 'sdk', group: 'framework', tagline: 'Vue.js wrapper for MapLibre GL JS',
+            description: 'Vue.js plugin that provides MapLibre GL JS components.', link: 'https://github.com/example/vue-maplibre',
+            url: 'https://makewithmaplibre.com/sdks/vue-maplibre/', platforms: ['Web'], languages: ['TypeScript'], frameworks: ['Vue'], renderers: ['MapLibre GL JS'],
+        },
     ],
     basemaps: [
         {
@@ -183,6 +193,41 @@ describe('ecosystem', () => {
         const client = await connect('ecosystem');
         const text = textOf(await client.callTool({name: 'search_ecosystem', arguments: {kind: 'consultant'}}));
         expect(text).toContain('Geo Agency (consultancy): Builds MapLibre apps for clients.');
+    });
+
+    test('counts the GL JS controls for routing and geocoding as plugins', async () => {
+        const client = await connect('ecosystem');
+        const routing = textOf(await client.callTool({name: 'search_ecosystem', arguments: {query: 'routing', kind: 'plugin', platform: 'Web'}}));
+        expect(routing).toContain('1 entry matches "routing", kind plugin, platform Web:');
+        expect(routing).toContain('MapLibre GL Directions (routing): Routing plugin for web maps');
+        const plugins = textOf(await client.callTool({name: 'search_ecosystem', arguments: {kind: 'plugin'}}));
+        expect(plugins).toContain('maplibre-contour (plugin, layers)');
+        expect(plugins).not.toContain('Vue MapLibre');
+    });
+
+    test('counts the results of each kind, and lists libraries and services before products', async () => {
+        const client = await connect('ecosystem');
+        const text = textOf(await client.callTool({name: 'search_ecosystem', arguments: {query: 'valhalla'}}));
+        expect(text).toContain('3 entries match "valhalla" (1 routing library, 1 hosted service and 1 product):');
+        expect(text.indexOf('Valhalla (routing)')).toBeLessThan(text.indexOf('Stadia Maps (hosted routing API)'));
+        expect(text.indexOf('Stadia Maps (hosted routing API)')).toBeLessThan(text.indexOf('Immich (product)'));
+        const sdks = textOf(await client.callTool({name: 'search_ecosystem', arguments: {query: 'swiftui'}}));
+        expect(sdks).toContain('1 entry matches "swiftui":');
+    });
+
+    test('says which other kinds match when a kind leaves nothing', async () => {
+        const client = await connect('ecosystem');
+        const text = textOf(await client.callTool({name: 'search_ecosystem', arguments: {query: 'contour', kind: 'sdk'}}));
+        expect(text).toContain('Nothing in Make with MapLibre matches "contour", kind sdk. Without the kind, 1 plugin matches.');
+    });
+
+    test('points to find_basemaps when basemaps match the words', async () => {
+        const client = await connect('ecosystem');
+        const dark = textOf(await client.callTool({name: 'search_ecosystem', arguments: {query: 'dark'}}));
+        expect(dark).toContain('Nothing in Make with MapLibre matches "dark". Try fewer or broader words, or another kind.');
+        expect(dark).toContain('1 basemap matches too. find_basemaps lists it with its style or tile URL.');
+        const routing = textOf(await client.callTool({name: 'search_ecosystem', arguments: {query: 'dark', kind: 'routing'}}));
+        expect(routing).not.toContain('find_basemaps');
     });
 
     test('says when nothing matches', async () => {

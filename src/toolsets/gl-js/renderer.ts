@@ -1,5 +1,5 @@
 import {readFile} from 'node:fs/promises';
-import {createServer} from 'node:http';
+import {createServer, type ServerResponse} from 'node:http';
 import {createRequire} from 'node:module';
 import path from 'node:path';
 import {type Browser, chromium} from 'playwright-core';
@@ -19,6 +19,7 @@ type PageInput = {
     lookAt?: LookAt;
     attribution: boolean;
     timeoutMs: number;
+    errorGraceMs: number;
 };
 
 type PageOutcome = {
@@ -46,6 +47,8 @@ type FailedRequest = {
 };
 
 const IDLE_TIMEOUT_MS = 30_000;
+/** How long a map that reported an error still gets to finish. One whose source failed to load never does. */
+const ERROR_GRACE_MS = 3000;
 /** The pitch that a GL JS map allows unless its maxPitch says otherwise. */
 const DEFAULT_MAX_PITCH = 60;
 const MAX_ERRORS = 20;
@@ -79,8 +82,7 @@ let origin: Promise<string> | undefined;
 let browser: Promise<Browser> | undefined;
 
 async function render({style, camera, lookAt, width, height, attribution = true}: RenderRequest): Promise<RenderResult> {
-    origin ??= serveAssets();
-    const [pageOrigin, instance] = await Promise.all([origin, getBrowser()]);
+    const [pageOrigin, instance] = await Promise.all([assetOrigin(), getBrowser()]);
     const page = await instance.newPage({viewport: {width, height}});
     const failed: FailedRequest[] = [];
     page.on('response', response => {
@@ -90,10 +92,13 @@ async function render({style, camera, lookAt, width, height, attribution = true}
     try {
         await page.goto(pageOrigin);
         await page.waitForFunction(() => window.maplibregl !== undefined);
-        const outcome = await page.evaluate(renderInPage, {styleJson: JSON.stringify(style), camera, lookAt, attribution, timeoutMs: IDLE_TIMEOUT_MS});
+        const outcome = await page.evaluate(renderInPage, {
+            styleJson: JSON.stringify(style), camera, lookAt, attribution, timeoutMs: IDLE_TIMEOUT_MS, errorGraceMs: ERROR_GRACE_MS,
+        });
         return {
             png: await page.screenshot({type: 'png'}),
             camera: outcome.camera,
+            failed: outcome.errors.length > 0 || !outcome.idle,
             notes: [...describeOutcome(outcome), ...describeMissingFonts(style.glyphs, failed)],
         };
     } finally {
@@ -102,7 +107,7 @@ async function render({style, camera, lookAt, width, height, attribution = true}
 }
 
 /** Draws the style in the page and waits until the map is idle. Runs in the browser, so it can only use its arguments. */
-async function renderInPage({styleJson, camera, lookAt, attribution, timeoutMs}: PageInput): Promise<PageOutcome> {
+async function renderInPage({styleJson, camera, lookAt, attribution, timeoutMs, errorGraceMs}: PageInput): Promise<PageOutcome> {
     const {maplibregl, pmtiles} = window;
     if (!maplibregl) throw new Error('MapLibre GL JS did not load in the page.');
     if (pmtiles) maplibregl.addProtocol('pmtiles', new pmtiles.Protocol().tile);
@@ -117,12 +122,22 @@ async function renderInPage({styleJson, camera, lookAt, attribution, timeoutMs}:
         fadeDuration: 0,
         attributionControl: attribution ? {compact: true} : false,
     });
-    map.on('error', event => errors.add(event.error.message));
+    let lastError = 0;
+    map.on('error', event => {
+        const sourceId = (event as {sourceId?: string}).sourceId;
+        errors.add(`${sourceId ? `Source "${sourceId}": ` : ''}${event.error.message}`);
+        lastError = Date.now();
+    });
     map.on('styleimagemissing', event => missingImages.add(event.id));
 
     const untilIdle = (): Promise<boolean> => new Promise(resolve => {
         map.once('idle', () => resolve(true));
         setTimeout(() => resolve(false), timeoutMs);
+        const gaveUp = setInterval(() => {
+            if (lastError === 0 || Date.now() - lastError < errorGraceMs) return;
+            clearInterval(gaveUp);
+            resolve(false);
+        }, 250);
     });
     let idle = await untilIdle();
     if (!lookAt) return {version: maplibregl.getVersion(), errors: [...errors], missingImages: [...missingImages], idle};
@@ -142,7 +157,7 @@ function describeOutcome({version, camera, errors, missingImages, idle}: PageOut
     if (camera && camera.pitch > DEFAULT_MAX_PITCH) {
         notes.push(`A map shows this view only with maxPitch ${Math.ceil(camera.pitch)} or more, since its default is ${DEFAULT_MAX_PITCH}.`);
     }
-    if (!idle) notes.push(`The map did not finish loading within ${IDLE_TIMEOUT_MS / 1000} seconds, so the image may be incomplete.`);
+    if (!idle && errors.length === 0) notes.push(`The map did not finish loading within ${IDLE_TIMEOUT_MS / 1000} seconds, so the image may be incomplete.`);
     if (errors.length > 0) {
         notes.push('Errors from the map:', ...errors.slice(0, MAX_ERRORS).map(error => `  ${error}`));
         if (errors.length > MAX_ERRORS) notes.push(`  and ${errors.length - MAX_ERRORS} more.`);
@@ -174,19 +189,39 @@ function describeMissingFonts(glyphs: string | undefined, failed: FailedRequest[
     return [`Glyphs did not load for these font stacks, so their text is drawn with local fonts: ${stacks.join(', ')}.`];
 }
 
+/** Answers a request for a path, or leaves it to the next route by resolving to false. */
+type Route = (pathname: string, response: ServerResponse) => Promise<boolean>;
+
+const routes: Route[] = [];
+
+/** Lets another tool serve its pages next to MapLibre GL JS, from the same local server. */
+export function addRoute(route: Route): void {
+    routes.push(route);
+}
+
+/** The origin of the local server that has MapLibre GL JS, which starts on first use. */
+export function assetOrigin(): Promise<string> {
+    origin ??= serveAssets();
+    return origin;
+}
+
 /** Serves MapLibre GL JS to the headless browser from this package's own dependency. */
 function serveAssets(): Promise<string> {
     const server = createServer(async (request, response) => {
-        if (request.url === '/') {
+        const {pathname} = new URL(request.url ?? '/', 'http://localhost');
+        if (pathname === '/') {
             response.writeHead(200, {'content-type': 'text/html'}).end(PAGE);
             return;
         }
-        const asset = ASSETS[request.url ?? ''];
-        if (!asset) {
-            response.writeHead(404).end();
+        const asset = ASSETS[pathname];
+        if (asset) {
+            response.writeHead(200, {'content-type': asset.type}).end(await readFile(asset.file));
             return;
         }
-        response.writeHead(200, {'content-type': asset.type}).end(await readFile(asset.file));
+        for (const route of routes) {
+            if (await route(pathname, response)) return;
+        }
+        response.writeHead(404).end();
     });
     return new Promise((resolve, reject) => {
         server.on('error', reject);

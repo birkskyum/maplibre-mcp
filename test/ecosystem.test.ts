@@ -247,9 +247,7 @@ describe('ecosystem', () => {
     test('says how to add elevation tiles, and the credit they need', async () => {
         const client = await connect('ecosystem');
         const text = textOf(await client.callTool({name: 'find_basemaps', arguments: {query: 'elevation'}}));
-        expect(text).toContain('  Tiles, to add as a raster-dem source with tileSize 256: https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png');
-        expect(text).toContain('  Elevation encoding: terrarium');
-        expect(text).toContain('  Attribution the map has to show: <a href="https://github.com/tilezen/joerd">Mapzen Terrain Tiles</a>');
+        expect(text).toContain('  Source for a style: {"type":"raster-dem","tiles":["https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png"],"tileSize":256,"encoding":"terrarium","attribution":"<a href=\\"https://github.com/tilezen/joerd\\">Mapzen Terrain Tiles</a>"}');
     });
 
     test('says when a provider requires its logo on the map', async () => {

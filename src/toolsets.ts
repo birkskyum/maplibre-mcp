@@ -13,6 +13,8 @@ export type Toolset = {
     register?: (server: McpServer) => void;
     /** How to work with the toolset's tools, as part of the instructions the server gives its client. */
     instructions?: string;
+    /** What the toolset can do about a style that did not load, as a line for a render that failed. */
+    renderFailureHint?: string;
     /** A renderer that the shared `render_style` tool offers. */
     renderer?: Renderer;
 };

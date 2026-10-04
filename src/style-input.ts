@@ -1,6 +1,5 @@
 import type {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {CallToolResult} from '@modelcontextprotocol/server';
-import {readFile, writeFile} from 'node:fs/promises';
+import {readFile} from 'node:fs/promises';
 import path from 'node:path';
 import {z} from 'zod';
 
@@ -19,7 +18,7 @@ export type StyleInput = {
 
 let fileAccess = true;
 
-/** Stops the tools from reading and writing style files, for a server that clients on other machines can reach. */
+/** Stops the tools from reading files, for a server that clients on other machines can reach. */
 export function disableFileAccess(): void {
     fileAccess = false;
 }
@@ -49,16 +48,6 @@ export function missingFile(file: string): string {
     return `There is no file at ${path.resolve(file)}.${from}`;
 }
 
-/**
- * Returns a rewritten style to the caller. A style that came from a file is written back to that file,
- * so a large style does not have to travel through the conversation.
- */
-export async function returnStyle(input: StyleInput, json: string, action: string): Promise<CallToolResult> {
-    if (input.path === undefined) return {content: [{type: 'text', text: json}]};
-    await writeFile(checkFileAccess(input.path), json);
-    return {content: [{type: 'text', text: `${action} ${input.path}.`}]};
-}
-
 /** Whether the tools may read files and load pages, which a server that other machines can reach does not do. */
 export function hasFileAccess(): boolean {
     return fileAccess;
@@ -66,7 +55,7 @@ export function hasFileAccess(): boolean {
 
 export function checkFileAccess(path: string): string {
     if (!fileAccess) {
-        throw new Error('This server does not read or write files, since other machines can reach it. Pass the style as an object or a URL.');
+        throw new Error('This server does not read files, since other machines can reach it. Pass the style as an object or a URL.');
     }
     return path;
 }

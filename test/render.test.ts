@@ -59,6 +59,28 @@ describe('render_style', () => {
         }
     });
 
+    test('comes back as an error, with the reason first, when a source does not load', async () => {
+        const client = await connect('style,gl-js,ecosystem');
+        const {origin, server} = await serveJson({});
+        try {
+            const started = Date.now();
+            const result = await client.callTool({name: 'render_style', arguments: {width: 120, height: 80, style: {
+                version: 8,
+                sources: {streets: {type: 'vector', url: `${origin}/no-such-tiles.json`}},
+                layers: [{id: 'roads', type: 'line', source: 'streets', 'source-layer': 'roads'}],
+            }}});
+            const items = result.content as {type: string; text?: string}[];
+            expect(result.isError).toBe(true);
+            expect(items.map(item => item.type)).toEqual(['text', 'image']);
+            expect(items[0].text).toMatch(/^The map did not load completely, so the image does not show the style as it will look\./);
+            expect(items[0].text).toContain('Source "streets":');
+            expect(items[0].text).toContain('A source URL that is guessed rarely exists. find_basemaps lists basemap styles, tiles and elevation data that do.');
+            expect(Date.now() - started).toBeLessThan(15_000);
+        } finally {
+            server.close();
+        }
+    }, 20_000);
+
     test('places the camera from where it is and what it looks at', async () => {
         const client = await connect('gl-js');
         const high = textOf(await client.callTool({name: 'render_style', arguments: {style: BLUE_STYLE, cameraPosition: [0, -0.01, 1000], lookAt: [0, 0], width: 120, height: 80}}));

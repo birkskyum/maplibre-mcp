@@ -20,14 +20,14 @@ describe('createServer', () => {
     test('offers one render_style tool for all renderers', async () => {
         const client = await connect('gl-js,native');
         const {tools} = await client.listTools();
-        expect(tools.map(tool => tool.name)).toEqual(['describe_gl_js_api', 'show_map', 'render_page', 'render_style', 'compare_styles', 'compare_renderers']);
-        expect(tools[3].inputSchema.properties?.renderer).toMatchObject({enum: ['gl-js', 'native'], default: 'gl-js'});
+        expect(tools.map(tool => tool.name)).toEqual(['describe_gl_js_api', 'show_map', 'render_page', 'preview_style', 'render_style', 'compare_styles', 'compare_renderers']);
+        expect(tools[4].inputSchema.properties?.renderer).toMatchObject({enum: ['gl-js', 'native'], default: 'gl-js'});
     });
 
     test('offers compare_renderers only with two renderers', async () => {
         const client = await connect('gl-js');
         const {tools} = await client.listTools();
-        expect(tools.map(tool => tool.name)).toEqual(['describe_gl_js_api', 'show_map', 'render_page', 'render_style', 'compare_styles']);
+        expect(tools.map(tool => tool.name)).toEqual(['describe_gl_js_api', 'show_map', 'render_page', 'preview_style', 'render_style', 'compare_styles']);
     });
 
     test('tells the client how to work with the tools it has, and names no other tool', async () => {
@@ -43,6 +43,7 @@ describe('createServer', () => {
     test('says what the page renderer is for and how to load MapLibre GL JS only with the gl-js toolset', async () => {
         const withGlJs = (await connect('style,gl-js')).getInstructions();
         expect(withGlJs).toContain('render_page draws a page of your own');
+        expect(withGlJs).toContain('preview_style gives the user a link');
         expect(withGlJs).toMatch(/import \* as maplibregl from 'https:\/\/unpkg\.com\/maplibre-gl@6\.\d+\.\d+\/dist\/maplibre-gl\.mjs'/);
         const styleOnly = (await connect('style')).getInstructions();
         expect(styleOnly).toContain('inspect_tile');
@@ -53,6 +54,6 @@ describe('createServer', () => {
     test('offers no render_style without a renderer', async () => {
         const client = await connect('style');
         const {tools} = await client.listTools();
-        expect(tools.map(tool => tool.name)).toEqual(['validate_style', 'describe_style_spec', 'describe_sources', 'inspect_tile', 'debug_layers', 'format_style', 'migrate_style']);
+        expect(tools.map(tool => tool.name)).toEqual(['validate_style', 'describe_style_spec', 'describe_sources', 'inspect_tile', 'debug_layers']);
     });
 });

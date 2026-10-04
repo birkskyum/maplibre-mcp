@@ -51,8 +51,8 @@ const INTRO = [
 const SECTIONS: Section[] = [
     {
         title: 'Check styles and data',
-        text: 'These tools are in the `style` toolset, which is on by default. `format_style` and `migrate_style` write to the file given in `path`, and the others only read.',
-        tools: ['validate_style', 'describe_style_spec', 'describe_sources', 'inspect_tile', 'debug_layers', 'format_style', 'migrate_style'],
+        text: 'These tools are in the `style` toolset, which is on by default. They only read.',
+        tools: ['validate_style', 'describe_style_spec', 'describe_sources', 'inspect_tile', 'debug_layers'],
     },
     {
         title: 'Look up the GL JS API',
@@ -70,8 +70,12 @@ const SECTIONS: Section[] = [
     },
     {
         title: 'Show maps',
-        text: '`show_map` is in the `gl-js` toolset, which is on by default. The user sees the map in clients that support MCP Apps, like Claude and VS Code.',
-        tools: ['show_map'],
+        text: [
+            'These tools are in the `gl-js` toolset, which is on by default.',
+            '`preview_style` gives the user a link to a live map of a style, and `render_page` draws a page with whatever the page adds to its map.',
+            'The user sees the map of `show_map` in clients that support MCP Apps, like Claude and VS Code.',
+        ].join(' '),
+        tools: ['preview_style', 'render_page', 'show_map'],
     },
     {
         title: 'Martin',

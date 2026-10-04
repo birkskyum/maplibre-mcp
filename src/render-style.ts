@@ -36,6 +36,8 @@ export type RenderResult = {
     png: Uint8Array;
     /** The camera the renderer ended up with, when it placed the camera itself. */
     camera?: Camera;
+    /** Whether the map did not load completely, so that the image does not show the style as it will look. */
+    failed?: boolean;
     /** Lines for the model about the render, such as the renderer version and the errors the map reported. */
     notes: string[];
 };
@@ -78,8 +80,11 @@ const FIT_PADDING = 32;
 const FIT_MAX_ZOOM = 18;
 const TILE_SIZE = 512;
 
-/** Registers `render_style`, which draws with any of the renderers that the enabled toolsets provide. */
-export function registerRenderStyle(server: McpServer, renderers: Renderer[]): void {
+/**
+ * Registers `render_style`, which draws with any of the renderers that the enabled toolsets provide.
+ * `failureHints` are lines for a render that failed, about where the other enabled tools can help.
+ */
+export function registerRenderStyle(server: McpServer, renderers: Renderer[], failureHints: string[] = []): void {
     const names = renderers.map(renderer => renderer.name);
     server.registerTool('render_style', {
         title: 'Render style',
@@ -104,14 +109,14 @@ export function registerRenderStyle(server: McpServer, renderers: Renderer[]): v
         const camera = resolveCamera(style, input, input.width, input.height);
         const renderer = findRenderer(renderers, input.renderer);
         const lookAt = resolveLookAt(input, renderer);
-        const {png, notes, camera: placed} = await renderer
+        const {png, notes, camera: placed, failed} = await renderer
             .render({style, styleUrl: input.url, camera, lookAt, width: input.width, height: input.height});
-        return {
-            content: [
-                {type: 'image', data: Buffer.from(png).toString('base64'), mimeType: 'image/png'},
-                {type: 'text', text: [describeCamera(placed ?? camera), ...notes].join('\n')},
-            ],
-        };
+        const image = {type: 'image' as const, data: Buffer.from(png).toString('base64'), mimeType: 'image/png'};
+        const lines = [describeCamera(placed ?? camera), ...notes];
+        if (!failed) return {content: [image, {type: 'text', text: lines.join('\n')}]};
+        // The reason comes before the image, which is easy to take for the map when the reason follows it.
+        const reason = ['The map did not load completely, so the image does not show the style as it will look.', ...lines, ...failureHints];
+        return {isError: true, content: [{type: 'text', text: reason.join('\n')}, image]};
     });
 }
 

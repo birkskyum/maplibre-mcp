@@ -7,9 +7,10 @@ export const ecosystemToolset: Toolset = {
     name: 'ecosystem',
     description: 'Search Make with MapLibre for SDKs, plugins, services, products and basemaps',
     instructions: [
-        'search_ecosystem finds the plugins and services that add what MapLibre itself does not have, like contour lines, drawing, routing and geocoding.',
+        'search_ecosystem finds the plugins and services that add what MapLibre itself lacks, like contour lines, drawing, routing and geocoding.',
         'find_basemaps lists basemap styles, tiles and elevation data, and says which need an API key.',
     ].join(' '),
+    renderFailureHint: 'A source URL that is guessed rarely exists. find_basemaps lists basemap styles, tiles and elevation data that do.',
     register(server) {
         registerSearchEcosystem(server);
         registerFindBasemaps(server);
@@ -230,14 +231,22 @@ function productEntry(product: Product, usedNames: Map<string, string>, category
 
 /** How to put a basemap on a map, with what the provider requires the map to show. */
 function basemapSetup(basemap: Basemap): string[] {
-    const lines = basemap.styleUrl ?
-        [`  Style URL: ${basemap.styleUrl}`] :
-        [
-            // MapLibre assumes 512 pixel tiles, so a source of 256 pixel tiles has to say so.
-            `  Tiles, to add as a ${basemap.encoding ? 'raster-dem' : 'raster'} source with tileSize ${basemap.tileSize ?? 256}: ${[basemap.tileUrl ?? []].flat().join(', ')}`,
-            ...(basemap.encoding ? [`  Elevation encoding: ${basemap.encoding}`] : []),
-        ];
-    if (basemap.attribution) lines.push(`  Attribution the map has to show: ${basemap.attribution}`);
+    const lines: string[] = [];
+    if (basemap.styleUrl) {
+        lines.push(`  Style URL: ${basemap.styleUrl}`);
+        if (basemap.attribution) lines.push(`  Attribution the map has to show: ${basemap.attribution}`);
+    } else {
+        // The source as it goes into a style, since a tile URL in prose is easy to put in the wrong property.
+        // MapLibre assumes 512 pixel tiles, so a source of 256 pixel tiles has to say so.
+        const source = {
+            type: basemap.encoding ? 'raster-dem' : 'raster',
+            tiles: [basemap.tileUrl ?? []].flat(),
+            tileSize: basemap.tileSize ?? 256,
+            ...(basemap.encoding ? {encoding: basemap.encoding} : {}),
+            ...(basemap.attribution ? {attribution: basemap.attribution} : {}),
+        };
+        lines.push(`  Source for a style: ${JSON.stringify(source)}`);
+    }
     if (basemap.logoControl) lines.push(`  ${basemap.provider}'s terms require its logo on the map: add the control from the npm package ${basemap.logoControl}.`);
     return lines;
 }

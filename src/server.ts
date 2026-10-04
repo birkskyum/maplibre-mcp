@@ -27,7 +27,7 @@ export function createServer(toolsets: Toolset[]): McpServer {
     for (const toolset of toolsets) toolset.register?.(server);
 
     if (renderers.length > 0) {
-        registerRenderStyle(server, renderers);
+        registerRenderStyle(server, renderers, toolsets.flatMap(toolset => toolset.renderFailureHint ?? []));
         registerCompareStyles(server, renderers);
     }
     if (renderers.length > 1) registerCompareRenderers(server, renderers);

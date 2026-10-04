@@ -317,29 +317,3 @@ describe('debug_layers', () => {
         expect(text).toContain('labels (symbol): draws 3 of the 3 features in source layer "roads". Its text is drawn with local fonts, since the style has no glyphs URL.');
     });
 });
-
-describe('format_style', () => {
-    test('formats a style file in place', async () => {
-        const file = path.join(await mkdtemp(path.join(tmpdir(), 'maplibre-mcp-')), 'style.json');
-        await writeFile(file, '{"layers": [], "sources": {}, "version": 8}');
-        const client = await connect('style');
-        const result = await client.callTool({name: 'format_style', arguments: {path: file}});
-        expect(textOf(result)).toBe(`Formatted ${file}.`);
-        expect(await readFile(file, 'utf8')).toBe('{"version": 8, "sources": {}, "layers": []}\n');
-    });
-});
-
-describe('migrate_style', () => {
-    test('turns legacy filters and functions into expressions', async () => {
-        const client = await connect('style');
-        const result = await client.callTool({name: 'migrate_style', arguments: {style: {
-            version: 8,
-            sources: {},
-            layers: [{id: 'roads', type: 'line', source: 's', filter: ['==', 'class', 'motorway'], paint: {'line-width': {stops: [[5, 1], [10, 4]]}}}],
-        }}});
-        expect(JSON.parse(textOf(result)).layers[0]).toMatchObject({
-            filter: ['==', ['get', 'class'], 'motorway'],
-            paint: {'line-width': ['interpolate', ['linear'], ['zoom'], 5, 1, 10, 4]},
-        });
-    });
-});

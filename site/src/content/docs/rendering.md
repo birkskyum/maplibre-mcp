@@ -25,6 +25,14 @@ When the page keeps its map in `window.map`, the screenshot waits until that map
 
 A server that other machines can reach does not load pages.
 
+### Showing the map to the user
+
+`preview_style` gives the user a link to an interactive map of a style, served by the server on their machine. The agent has no viewer page to write, no web server to start and no browser to open. Given a file, the map follows it and redraws when the file changes, so the link can stay open while the agent works. It lasts as long as the server runs.
+
+### When a style does not load
+
+A render where the map reports errors, like a source that does not exist, comes back as an error after a few seconds, with the reason before the image. It names each source that failed, and says which tools find sources that exist.
+
 ## MapLibre Native
 
 The `native` toolset draws with MapLibre Native, the engine of the MapLibre iOS and Android SDKs, through `@maplibre/maplibre-gl-native`. That package has builds for macOS, Windows and Ubuntu 24.04, and has to be installed next to the server:

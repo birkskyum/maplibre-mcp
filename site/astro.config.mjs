@@ -22,7 +22,7 @@ export default defineConfig({
             components: {SocialIcons: './src/components/HeaderLinks.astro'},
             head: [{tag: 'meta', attrs: {property: 'og:image', content: `${SITE}${BASE}/images/social.png`}}],
             sidebar: [
-                {label: 'Guide', items: ['getting-started', 'examples', 'command-line', 'rendering', 'ecosystem', 'remote-server', 'troubleshooting']},
+                {label: 'Guide', items: ['getting-started', 'examples', 'command-line', 'rendering', 'ecosystem', 'remote-server', 'containers', 'troubleshooting']},
                 {label: 'Reference', items: ['tools', 'changelog']},
             ],
             plugins: [

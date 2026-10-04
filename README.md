@@ -46,6 +46,8 @@ Claude Desktop, Cursor, Windsurf and most other clients read this JSON. [Getting
 
 Rendering with MapLibre GL JS uses the installed Google Chrome. Without Chrome, the first render fails with the command that installs the Chromium it can use instead.
 
+In a sandbox or in CI, where no browser can be installed, use the container image `ghcr.io/birkskyum/maplibre-mcp`, which has the server and its Chromium. [Containers and sandboxes](https://birkskyum.github.io/maplibre-mcp/containers/) shows how.
+
 ## Command line
 
 Agents that work in a shell, and people, can also run the rendering and data tools, and the GL JS API lookup, as commands, without setting up MCP. A style is a file or a URL.

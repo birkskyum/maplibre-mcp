@@ -18,3 +18,16 @@ jobs:
       - run: npm ci
       - run: npx playwright-core install --with-deps chromium
       - run: xvfb-run -a npm test
+
+  image:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - run: docker build -t maplibre-mcp .
+      # The command the docs give for CI: the folder with the style is the working directory, and the image is written into it.
+      - run: |
+          mkdir work
+          echo '{"version": 8, "sources": {}, "layers": [{"id": "background", "type": "background", "paint": {"background-color": "#3366cc"}}]}' > work/style.json
+          docker run --rm --user "$(id -u):$(id -g)" -v "$PWD/work:/work" -w /work maplibre-mcp render style.json --out map.png
+          test -s work/map.png
+

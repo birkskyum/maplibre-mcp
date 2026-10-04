@@ -93,8 +93,11 @@ function report(message) {
 }
 const read = () => fetch('style.json').then(response => response.ok ? response.text() : undefined, () => undefined);
 
+// A camera that render_style placed can be steeper than a map allows by default, so the map allows the pitch that its style stores.
+const maxPitch = style => Math.max(85, Math.ceil(style?.pitch ?? 0));
 let text = remote ? undefined : await read();
-const map = new maplibregl.Map({container: 'map', style: remote ?? JSON.parse(text), hash: true, maxPitch: 85});
+const first = remote ? undefined : JSON.parse(text);
+const map = new maplibregl.Map({container: 'map', style: remote ?? first, hash: true, maxPitch: maxPitch(first)});
 window.map = map;
 map.addControl(new maplibregl.NavigationControl({visualizePitch: true}));
 map.on('error', event => report(event.error.message));
@@ -107,7 +110,9 @@ if (!remote) setInterval(async () => {
     errors.clear();
     box.style.display = 'none';
     try {
-        map.setStyle(JSON.parse(next), {diff: true});
+        const style = JSON.parse(next);
+        map.setMaxPitch(maxPitch(style));
+        map.setStyle(style, {diff: true});
     } catch (error) {
         report(error.message);
     }

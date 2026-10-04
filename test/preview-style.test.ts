@@ -29,6 +29,15 @@ describe('preview_style', () => {
         expect(textOf(await later)).toContain('The script returned: "#cc3366"');
     }, 30_000);
 
+    test('shows a style at the steep pitch it stores', async () => {
+        const client = await connect('gl-js');
+        const steep = {...JSON.parse(style('#3366cc')), center: [7.66, 45.98], zoom: 12, pitch: 88};
+        const text = textOf(await client.callTool({name: 'preview_style', arguments: {style: steep}}));
+        const [url] = /http:\/\/127\.0\.0\.1:\d+\/preview\/[0-9a-f]+\//.exec(text) ?? [];
+        const page = await client.callTool({name: 'render_page', arguments: {url, width: 120, height: 80}});
+        expect(textOf(page)).toContain('bearing 0, pitch 88.');
+    });
+
     test('says what is wrong with a style it cannot read', async () => {
         const client = await connect('gl-js');
         const result = await client.callTool({name: 'preview_style', arguments: {path: 'no-such-folder/style.json'}});

@@ -4,7 +4,7 @@ import {readFile} from 'node:fs/promises';
 import path from 'node:path';
 import {z} from 'zod';
 import {hasFileAccess, loadStyle, STYLE_INPUT} from '../../style-input.js';
-import {addRoute, assetOrigin} from './renderer.js';
+import {addRoute, assetOrigin, IN_CONTAINER, PREVIEW_PORT} from './renderer.js';
 
 /** A style that the local server shows as a map, read again from its file on every request. */
 type Preview = {
@@ -47,6 +47,12 @@ export function registerPreviewStyle(server: McpServer): void {
         annotations: {readOnlyHint: true, openWorldHint: false},
     }, async input => {
         if (!hasFileAccess()) throw new Error('This server runs on another machine than the user, so it has no link to give them. Send them the style instead.');
+        if (IN_CONTAINER && !PREVIEW_PORT) {
+            throw new Error([
+                'This server runs in a container, and the user\'s browser cannot reach a link into it.',
+                'Starting the container with a published port, like `-p 3210:3210 -e MAPLIBRE_MCP_PREVIEW_PORT=3210`, gives it one.',
+            ].join(' '));
+        }
         // Reading the style now says what is wrong with it here, and not later in the page.
         const style = await loadStyle(input);
         const preview: Preview = input.path !== undefined ?
@@ -54,7 +60,9 @@ export function registerPreviewStyle(server: McpServer): void {
             input.url !== undefined ? {title: input.url, url: input.url} : {title: style.name ?? 'Style', json: JSON.stringify(style)};
         const id = createHash('sha1').update(preview.file ?? preview.url ?? preview.json ?? '').digest('hex').slice(0, 10);
         previews.set(id, preview);
-        const lines = [`A map of the style is at ${await assetOrigin()}/preview/${id}/ for the user to open in a browser.`];
+        const local = await assetOrigin();
+        const origin = PREVIEW_PORT ? `http://localhost:${PREVIEW_PORT}` : local;
+        const lines = [`A map of the style is at ${origin}/preview/${id}/ for the user to open in a browser.`];
         if (preview.file) lines.push(`It follows ${preview.file} and redraws when the file changes.`);
         lines.push('The link works for as long as this server runs.');
         return {content: [{type: 'text', text: lines.join('\n')}]};

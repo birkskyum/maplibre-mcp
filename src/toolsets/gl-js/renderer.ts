@@ -1,3 +1,4 @@
+import {existsSync} from 'node:fs';
 import {readFile} from 'node:fs/promises';
 import {createServer, type ServerResponse} from 'node:http';
 import {createRequire} from 'node:module';
@@ -205,6 +206,12 @@ export function assetOrigin(): Promise<string> {
     return origin;
 }
 
+/** Whether the server runs in a container, where its own address is not one the user's browser can open. */
+export const IN_CONTAINER = existsSync('/.dockerenv');
+
+/** The port of the local server when `MAPLIBRE_MCP_PREVIEW_PORT` sets one, for a container that publishes it. */
+export const PREVIEW_PORT = Number(process.env.MAPLIBRE_MCP_PREVIEW_PORT) || undefined;
+
 /** Serves MapLibre GL JS to the headless browser from this package's own dependency. */
 function serveAssets(): Promise<string> {
     const server = createServer(async (request, response) => {
@@ -225,7 +232,8 @@ function serveAssets(): Promise<string> {
     });
     return new Promise((resolve, reject) => {
         server.on('error', reject);
-        server.listen(0, '127.0.0.1', () => {
+        // A published port of a container reaches the server only when it listens on every interface.
+        server.listen(PREVIEW_PORT ?? 0, IN_CONTAINER && PREVIEW_PORT ? '0.0.0.0' : '127.0.0.1', () => {
             server.unref();
             const address = server.address();
             if (typeof address === 'object' && address) resolve(`http://127.0.0.1:${address.port}`);

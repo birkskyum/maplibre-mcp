@@ -29,6 +29,8 @@ A server that other machines can reach does not load pages.
 
 `preview_style` gives the user a link to an interactive map of a style, served by the server on their machine. The agent has no viewer page to write, no web server to start and no browser to open. Given a file, the map follows it and redraws when the file changes, so the link can stay open while the agent works. It lasts as long as the server runs.
 
+In a container, the user's browser cannot reach the server's own address. Publish a port and name it in `MAPLIBRE_MCP_PREVIEW_PORT`, like `docker run -p 3210:3210 -e MAPLIBRE_MCP_PREVIEW_PORT=3210`, and the link uses it. Without one, `preview_style` says so instead of giving a link that does not open.
+
 ### When a style does not load
 
 A render where the map reports errors, like a source that does not exist, comes back as an error after a few seconds, with the reason before the image. It names each source that failed, and says which tools find sources that exist.

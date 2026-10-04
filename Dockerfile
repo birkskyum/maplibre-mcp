@@ -13,4 +13,4 @@ COPY package.json package-lock.json ./
 RUN npm ci --omit=dev && npx playwright-core install --with-deps --only-shell chromium && npm cache clean --force
 COPY --from=build /app/dist dist
 USER node
-ENTRYPOINT ["node", "dist/index.js"]
+ENTRYPOINT ["node", "/app/dist/index.js"]

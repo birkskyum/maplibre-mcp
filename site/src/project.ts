@@ -2,7 +2,7 @@
 export const SUMMARY = [
     'maplibre-mcp is an MCP server that lets AI agents check, render and show MapLibre styles.',
     'It validates styles against the MapLibre Style Specification, renders them with MapLibre GL JS, MapLibre Native or a Martin server,',
-    'compares two versions of a style or two renderers, and shows interactive maps in clients that support MCP Apps.',
+    'reads the vector tiles a style draws, compares two versions of a style, and gives the user a link to a live map that follows the style file.',
     'It runs locally with npx and needs no API key.',
 ].join(' ');
 

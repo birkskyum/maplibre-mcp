@@ -2,13 +2,20 @@
 
 [![birkskyum/maplibre-mcp MCP server](https://glama.ai/mcp/servers/birkskyum/maplibre-mcp/badges/score.svg)](https://glama.ai/mcp/servers/birkskyum/maplibre-mcp)
 
-An MCP server that lets AI agents check, render and show [MapLibre](https://maplibre.org) styles.
+An MCP server that lets an AI agent see the [MapLibre](https://maplibre.org) map it works on, check it, and show it to you.
 
-![A MapLibre style before and after an agent turned its motorways red, and the pixels that changed](https://raw.githubusercontent.com/birkskyum/maplibre-mcp/main/site/public/images/compare-z10.webp)
+![A hiking map of the Alps in 3D, with the Matterhorn against an evening sky](https://raw.githubusercontent.com/birkskyum/maplibre-mcp/main/site/public/images/hiking-style-matterhorn.webp)
 
-An agent turned the motorways in OpenFreeMap's Liberty style red, and `compare_styles` showed it the map before, after, and the pixels that changed.
+A hiking style an agent made from one prompt, rendered with `render_style` from a camera placed above Zermatt.
 
-Coding agents like Claude Code, Codex and Cursor can edit a MapLibre style, but they can't see the map, and they can mix up MapLibre and Mapbox. With maplibre-mcp, an agent can validate a style against the MapLibre Style Specification, render it with MapLibre GL JS, MapLibre Native or a Martin server, compare two versions of it, and show you an interactive map in the chat. It runs on your machine and needs no API key.
+A coding agent can write a MapLibre style, but it can't see the map. So it hands you untested work, or first spends minutes building a renderer of its own, and it reaches for what it remembers, like an older MapLibre GL JS or Mapbox. With maplibre-mcp the agent renders the style, looks at the image and fixes what it sees, and you get a link to a live map that redraws as it edits the file. It runs on your machine and needs no API key.
+
+Two things it is good for:
+
+- **Editing a style by chat while you watch the map change.** "Make the water darker", "thin the footpaths in the village". The agent edits the file and checks the render, and your open map follows.
+- **Finding out why a layer doesn't draw.** The agent reads the real tiles, sees which layers draw at a place and why the others don't, and fixes the filter.
+
+An agent with no shell to build its own tools, in a sandbox or a chat app, gets the most from it.
 
 **[Website](https://birkskyum.github.io/maplibre-mcp/)** · [Getting started](https://birkskyum.github.io/maplibre-mcp/getting-started/) · [Examples](https://birkskyum.github.io/maplibre-mcp/examples/) · [Tools](https://birkskyum.github.io/maplibre-mcp/tools/)
 

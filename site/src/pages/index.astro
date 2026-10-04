@@ -47,8 +47,8 @@ const COPY_BUTTON = 'shrink-0 rounded bg-slate-700 px-3 py-1 font-sans text-xs t
     <p class="text-sm font-semibold text-brand dark:text-sky-400">MCP server for MapLibre</p>
     <h1 class="mx-auto mt-3 max-w-4xl text-4xl font-bold tracking-tight sm:text-6xl">Let AI agents check, render and show MapLibre styles</h1>
     <p class="mx-auto mt-6 max-w-2xl text-lg text-slate-600 dark:text-slate-300">
-      maplibre-mcp helps AI agents get MapLibre styles right. With it, an agent can check a style, look at the map it made, and show you an interactive map.
-      It runs on your computer and needs no API key.
+      An AI agent can write a MapLibre style, but it can't see the map. With maplibre-mcp it renders the style, looks at the image and fixes what it sees,
+      and you get a link to a live map that redraws as it edits. It runs on your computer and needs no API key.
     </p>
     <div class="mt-8 flex flex-wrap justify-center gap-3">
       <a href={sitePath('getting-started/')} class={`${BUTTON} bg-brand text-white hover:bg-brand/90`}>Get started</a>
@@ -191,7 +191,8 @@ const COPY_BUTTON = 'shrink-0 rounded bg-slate-700 px-3 py-1 font-sans text-xs t
           <div class="md:col-span-2">
             <h3 class="text-xl font-semibold">Show</h3>
             <p class="mt-2 text-slate-600 dark:text-slate-300">
-              Show you an interactive map with GeoJSON layers and markers, right in the chat, in clients that support MCP Apps.
+              Give you a link to a live map of the style that follows the file as the agent edits it, or show you an interactive map with GeoJSON layers and markers
+              right in the chat, in clients that support MCP Apps.
             </p>
             <p class={TOOL_LIST}>{SHOW_TOOLS.map((tool, index) => <>{index > 0 && ' · '}<a href={sitePath(`tools/#${tool}`)} class="hover:text-brand">{tool}</a></>)}</p>
           </div>

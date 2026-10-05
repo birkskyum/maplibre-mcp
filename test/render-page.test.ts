@@ -47,6 +47,28 @@ describe('render_page', () => {
         expect(textOf(result)).toContain('The script returned: 1');
     });
 
+    test('runs a script that ends in a camera call, which evaluates to the map itself', async () => {
+        const folder = await pageFolder(`<!doctype html>
+            <link rel="stylesheet" href="maplibre/maplibre-gl.css">
+            <style>html, body, #map { margin: 0; height: 100%; }</style>
+            <div id="map"></div>
+            <script type="module">
+                import * as maplibregl from './maplibre/maplibre-gl.mjs';
+                window.map = new maplibregl.Map({
+                    container: 'map', center: [10, 50], zoom: 4, attributionControl: false,
+                    style: {version: 8, sources: {}, layers: [{id: 'background', type: 'background', paint: {'background-color': '#3366cc'}}]},
+                });
+            </script>`);
+        await cp(MAPLIBRE_DIST, path.join(folder, 'maplibre'), {recursive: true, filter: source => !source.endsWith('.map')});
+        const client = await connect('gl-js');
+        const result = await client.callTool({name: 'render_page', arguments: {
+            path: path.join(folder, 'index.html'), script: 'map.jumpTo({center: [20, 40], zoom: 6})', width: 120, height: 80,
+        }});
+        expect(result.isError).toBeFalsy();
+        expect(textOf(result)).toContain('Camera: center [20, 40], zoom 6, bearing 0, pitch 0.');
+        expect(textOf(result)).toContain('The script returned an object that cannot be shown, like the map itself.');
+    });
+
     test('reports the errors and failed requests of a page, also when it keeps no map', async () => {
         const folder = await pageFolder(`<!doctype html>
             <body style="margin: 0; background: #3366cc">

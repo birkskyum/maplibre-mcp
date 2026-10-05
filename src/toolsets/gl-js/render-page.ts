@@ -139,9 +139,15 @@ async function untilPageIsQuiet(page: Page): Promise<undefined> {
     return undefined;
 }
 
+/** Says what the script evaluated to. A script that ends in a call like map.jumpTo evaluates to the map, which has no JSON form. */
 function describeReturned(value: unknown): string | undefined {
     if (value === undefined) return undefined;
-    const json = JSON.stringify(value) ?? String(value);
+    let json: string;
+    try {
+        json = JSON.stringify(value) ?? String(value);
+    } catch {
+        return 'The script returned an object that cannot be shown, like the map itself.';
+    }
     return `The script returned: ${json.length > MAX_RETURNED ? `${json.slice(0, MAX_RETURNED)}…` : json}`;
 }
 

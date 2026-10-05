@@ -11,7 +11,7 @@ type Preview = {
     title: string;
     /** The file that the map follows. */
     file?: string;
-    /** The style as JSON text, when it was given as an object. */
+    /** The style as JSON text, when it was given as an object. A later call can put another style in its place. */
     json?: string;
     /** The URL that the map loads the style from itself. */
     url?: string;
@@ -41,9 +41,13 @@ export function registerPreviewStyle(server: McpServer): void {
             'Gives the user a link to an interactive map of a style, served by this server on their machine,',
             'so there is no viewer page to write, no web server to start and no browser to open for them.',
             'Given a file, the map follows it and redraws when the file changes.',
+            'Given the style as an object, the map shows a changed style when you pass it together with the link, as link.',
             'Pass the style as an object, a URL or a file path.',
         ].join(' '),
-        inputSchema: z.object(STYLE_INPUT),
+        inputSchema: z.object({
+            ...STYLE_INPUT,
+            link: z.string().optional().describe('A link that this tool gave before for a style passed as an object. The map there then shows this style, and a page that has it open redraws.'),
+        }),
         annotations: {readOnlyHint: true, openWorldHint: false},
     }, async input => {
         if (!hasFileAccess()) throw new Error('This server runs on another machine than the user, so it has no link to give them. Send them the style instead.');
@@ -53,20 +57,53 @@ export function registerPreviewStyle(server: McpServer): void {
                 'Starting the container with a published port, like `-p 3210:3210 -e MAPLIBRE_MCP_PREVIEW_PORT=3210`, gives it one.',
             ].join(' '));
         }
+        const shown = input.link === undefined ? undefined : previewAt(input.link);
+        if (shown && (input.style === undefined || shown.preview.json === undefined)) {
+            throw new Error('link puts a style passed as an object where another one was shown. A map of a file follows the file by itself.');
+        }
         // Reading the style now says what is wrong with it here, and not later in the page.
         const style = await loadStyle(input);
+        const local = await assetOrigin();
+        const origin = PREVIEW_PORT ? `http://localhost:${PREVIEW_PORT}` : local;
+        if (shown) {
+            shown.preview.json = JSON.stringify(style);
+            return {content: [{type: 'text', text: `The map at ${origin}/preview/${shown.id}/ now shows this style, and a page that has it open redraws.`}]};
+        }
         const preview: Preview = input.path !== undefined ?
             {title: path.basename(input.path), file: path.resolve(input.path)} :
             input.url !== undefined ? {title: input.url, url: input.url} : {title: style.name ?? 'Style', json: JSON.stringify(style)};
-        const id = createHash('sha1').update(preview.file ?? preview.url ?? preview.json ?? '').digest('hex').slice(0, 10);
+        const id = idFor(preview);
         previews.set(id, preview);
-        const local = await assetOrigin();
-        const origin = PREVIEW_PORT ? `http://localhost:${PREVIEW_PORT}` : local;
-        const lines = [`A map of the style is at ${origin}/preview/${id}/ for the user to open in a browser.`];
+        const link = `${origin}/preview/${id}/`;
+        const lines = [`A map of the style is at ${link} for the user to open in a browser.`];
         if (preview.file) lines.push(`It follows ${preview.file} and redraws when the file changes.`);
+        if (preview.json) {
+            lines.push(
+                `To show a changed style there, call preview_style with the style and link "${link}", and a page that has it open redraws.`,
+                `The other tools take ${link}style.json as url for the style that the map shows.`,
+            );
+        }
         lines.push('The link works for as long as this server runs.');
         return {content: [{type: 'text', text: lines.join('\n')}]};
     });
+}
+
+/** Finds the map that a link from an earlier call leads to. */
+function previewAt(link: string): {id: string; preview: Preview} {
+    const id = /(?:^|\/)([0-9a-f]{10})\/?$/.exec(link)?.[1];
+    const preview = id === undefined ? undefined : previews.get(id);
+    if (!id || !preview) throw new Error(`There is no map at ${link}, which can be a link from before this server started again. Leave link out to get a new one.`);
+    return {id, preview};
+}
+
+/** The same file, URL or object gets the same link again, unless another style was put there since. */
+function idFor(preview: Preview): string {
+    const key = preview.file ?? preview.url ?? preview.json ?? '';
+    for (let attempt = 0; ; attempt++) {
+        const id = createHash('sha1').update(attempt === 0 ? key : `${key}\n${attempt}`).digest('hex').slice(0, 10);
+        const taken = previews.get(id);
+        if (!taken || (taken.file === preview.file && taken.url === preview.url && taken.json === preview.json)) return id;
+    }
 }
 
 /** The page that shows a style as a map, with the errors of the map on top of it, since a blank map says nothing. */
